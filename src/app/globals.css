@@ -74,7 +74,7 @@ body {
 /* 暗色主题：tkyTV 自定义背景图（深色遮罩保证文字可读性） */
 .dark body {
   background:
-    linear-gradient(180deg, rgba(11, 16, 26, 0.62), rgba(11, 16, 26, 0.82)),
+    linear-gradient(180deg, rgba(11, 16, 26, 0.5), rgba(11, 16, 26, 0.72)),
     url('/bg.jpg') center top / cover no-repeat fixed;
 }
 
