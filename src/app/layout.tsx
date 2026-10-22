@@ -4,8 +4,8 @@ import { Providers } from '@/components/providers';
 
 export const metadata: Metadata = {
   title: {
-    default: 'tkyTV - 免费在线视频搜索与观看平台',
-    template: '%s - tkyTV',
+    default: 'tkytv-FORYOU',
+    template: '%s - tkytv',
   },
   description:
     'tkyTV 是一个免费的在线视频搜索平台，无广告、安全，提供来自多个视频源的内容搜索与观看服务，无需注册即可使用。',

@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'tkyTV - 免费在线视频搜索与观看平台',
-    short_name: 'tkyTV',
+    name: 'tkytv-FORYOU',
+    short_name: 'tkytv',
     description: '免费在线视频搜索与观看平台',
     start_url: '/',
     display: 'standalone',

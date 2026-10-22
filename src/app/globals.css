@@ -71,9 +71,11 @@ body {
   @apply bg-page text-content antialiased;
 }
 
-/* 暗色主题：模拟旧版 .page-bg 的深蓝黑纵向渐变 */
+/* 暗色主题：tkyTV 自定义背景图（深色遮罩保证文字可读性） */
 .dark body {
-  background: linear-gradient(180deg, rgb(11 16 26), rgb(20 28 41)) fixed;
+  background:
+    linear-gradient(180deg, rgba(11, 16, 26, 0.62), rgba(11, 16, 26, 0.82)),
+    url('/bg.jpg') center top / cover no-repeat fixed;
 }
 
 body {
