@@ -71,7 +71,7 @@ body {
 
 /* 黑白风：自定义壁纸去色为黑白（::before 承载滤镜，不影响页面内容） */
 .dark body {
-  background: #000;
+  background: transparent; /* 由 html 提供黑色兜底，让 ::before 壁纸可见 */
 }
 .dark body::before {
   content: '';
