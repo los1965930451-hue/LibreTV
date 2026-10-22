@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: '免费在线视频搜索与观看平台',
     start_url: '/',
     display: 'standalone',
-    background_color: '#111111',
-    theme_color: '#0b101a',
+    background_color: '#000000',
+    theme_color: '#000000',
     icons: [
       {
         src: '/icons/icon-192.png',
