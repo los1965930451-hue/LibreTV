@@ -92,10 +92,6 @@ body {
   -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
 
-/* 粉色 logo 去色为银白，贴合黑白主题 */
-.dark header img {
-  filter: grayscale(1) brightness(1.6) contrast(1.05);
-}
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC',

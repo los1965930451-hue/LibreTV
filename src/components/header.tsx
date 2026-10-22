@@ -41,7 +41,7 @@ export function Header({ showSearch = false }: { showSearch?: boolean }) {
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
           <Link href="/" aria-label="tkyTV 首页" className="flex items-center shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/icons/icon-512.png" alt="tkyTV" className="w-7 h-7 rounded-lg" />
+            <img src="/logo.png" alt="tkyTV" className="w-7 h-7 rounded-lg" />
           </Link>
 
           {showSearch && (
