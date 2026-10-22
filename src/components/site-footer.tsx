@@ -98,11 +98,11 @@ export function SiteFooter() {
           rel="noopener noreferrer"
           className="group relative inline-block cursor-help hover:text-accent"
         >
-          LibreTV{version ? ` v${version}` : ''}
+          tkyTV{version ? ` v${version}` : ''}
           {version && <UpdateTip update={upstreamUpdate} />}
         </a>
         {' · '}
-        AGPL-3.0 License
+        基于 <a href="https://github.com/LibreSpark/LibreTV" target="_blank" rel="noopener noreferrer" className="hover:text-accent">LibreTV</a>（AGPL-3.0）
       </p>
     </footer>
   );
