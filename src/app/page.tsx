@@ -342,7 +342,6 @@ function HomeContent() {
                       .join(' · ')
                   }
                   onOpen={(g) => setDetailItem(g.items[0])}
-                  proxyImage
                 />
                 {groups.length > visibleCount && (
                   <div className="flex justify-center mt-4">

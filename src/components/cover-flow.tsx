@@ -21,8 +21,6 @@ export interface CoverFlowProps<T> {
   onOpen: (item: T) => void;
   /** 中间按钮文案，默认「观看」 */
   actionLabel?: string;
-  /** 代理图片（豆瓣封面不需要，采集站海报需要） */
-  proxyImage?: boolean;
 }
 
 const MAX_DEPTH = 4; // 每侧最多展示的海报数
@@ -35,7 +33,6 @@ export function CoverFlow<T>({
   metaOf,
   onOpen,
   actionLabel = '观看',
-  proxyImage = false,
 }: CoverFlowProps<T>) {
   const [active, setActive] = useState(0);
   const imageProxyMode = useAppStore((s) => s.imageProxyMode);
@@ -160,24 +157,13 @@ export function CoverFlow<T>({
                 style={{ boxShadow: isCenter ? '0 24px 60px rgba(0,0,0,0.45)' : '0 10px 30px rgba(0,0,0,0.35)' }}
               >
                 {pic ? (
-                  proxyImage ? (
-                    <SmartImage
-                      url={pic}
-                      mode={imageProxyMode}
-                      customProxy={customImageProxy}
-                      alt={titleOf(item)}
-                      className="h-full w-full object-cover pointer-events-none"
-                    />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={pic}
-                      alt={titleOf(item)}
-                      loading="lazy"
-                      className="h-full w-full object-cover pointer-events-none"
-                      draggable={false}
-                    />
-                  )
+                  <SmartImage
+                    url={pic}
+                    mode={imageProxyMode}
+                    customProxy={customImageProxy}
+                    alt={titleOf(item)}
+                    className="h-full w-full object-cover pointer-events-none"
+                  />
                 ) : (
                   <span className="h-full w-full flex items-center justify-center text-faint">
                     <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 4v16m10-16v16M4 6h2v12H4zm4 0h2v12H8zm8 0h2v12h-2zm4 0h2v12h-2z" /></svg>
