@@ -220,7 +220,7 @@ function LiveContent() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header showSearch />
-      <main className="flex-1 max-w-7xl w-full mx-auto pl-4 pr-14 sm:pr-16 py-4">
+      <main className="flex-1 max-w-7xl w-full mx-auto pl-4 pr-16 sm:pr-20 py-4">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-4">
           {/* 主栏：播放器 + 信息条 + 节目单 */}
           <div className="min-w-0">
