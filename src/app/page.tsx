@@ -332,8 +332,17 @@ function HomeContent() {
             ) : list.length > 0 ? (
               <>
                 <CoverFlow
-                  groups={visibleGroups}
-                  onOpen={(group) => setDetailItem(group.items[0])}
+                  items={visibleGroups}
+                  keyOf={(g) => g.key}
+                  titleOf={(g) => g.name}
+                  picOf={(g) => g.pic}
+                  metaOf={(g) =>
+                    [g.year, g.typeName, g.items.length > 1 ? `${g.items.length} 个来源` : g.items[0]?.sourceName]
+                      .filter(Boolean)
+                      .join(' · ')
+                  }
+                  onOpen={(g) => setDetailItem(g.items[0])}
+                  proxyImage
                 />
                 {groups.length > visibleCount && (
                   <div className="flex justify-center mt-4">

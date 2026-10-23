@@ -1,10 +1,9 @@
 'use client';
 
 import type * as React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { SmartImage } from './smart-image';
-import type { AggregatedGroup } from './video-card';
 
 /**
  * 苹果 Cover Flow（iPod 风格）海报墙：
@@ -12,25 +11,44 @@ import type { AggregatedGroup } from './video-card';
  * - 支持点击两侧、左右箭头、键盘方向键、滚轮、触摸/鼠标拖动
  * - 中间海报带倒影；点击中间海报打开详情
  */
-interface CoverFlowProps {
-  groups: AggregatedGroup[];
-  onOpen: (group: AggregatedGroup) => void;
+export interface CoverFlowProps<T> {
+  items: T[];
+  keyOf: (item: T) => string;
+  titleOf: (item: T) => string;
+  picOf?: (item: T) => string | undefined;
+  /** 标题下方的灰色副标题（年份 / 类型 / 来源等） */
+  metaOf?: (item: T) => string | undefined;
+  onOpen: (item: T) => void;
+  /** 中间按钮文案，默认「观看」 */
+  actionLabel?: string;
+  /** 代理图片（豆瓣封面不需要，采集站海报需要） */
+  proxyImage?: boolean;
 }
 
 const MAX_DEPTH = 4; // 每侧最多展示的海报数
 
-export function CoverFlow({ groups, onOpen }: CoverFlowProps) {
+export function CoverFlow<T>({
+  items,
+  keyOf,
+  titleOf,
+  picOf,
+  metaOf,
+  onOpen,
+  actionLabel = '观看',
+  proxyImage = false,
+}: CoverFlowProps<T>) {
   const [active, setActive] = useState(0);
   const imageProxyMode = useAppStore((s) => s.imageProxyMode);
   const customImageProxy = useAppStore((s) => s.customImageProxy);
   const wheelLock = useRef(0);
   const drag = useRef<{ x: number; active: number } | null>(null);
 
-  // 新一次搜索 / 列表变化时回到第一张
-  const firstKey = groups[0]?.key;
-  const length = groups.length;
+  const length = items.length;
+  const firstKey = length > 0 ? keyOf(items[0]) : '';
+  // 新一次搜索 / 列表切换时回到第一张
   useEffect(() => {
     setActive(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstKey]);
 
   const clamp = useCallback((i: number) => Math.max(0, Math.min(length - 1, i)), [length]);
@@ -68,33 +86,13 @@ export function CoverFlow({ groups, onOpen }: CoverFlowProps) {
     drag.current = null;
   };
 
-  const center = groups[clamp(active)];
-
-  const cards = useMemo(() => {
-    return groups.map((g, i) => {
-      const offset = i - active;
-      const abs = Math.abs(offset);
-      if (abs > MAX_DEPTH) return { g, i, offset, hidden: true as const };
-      let transform: string;
-      let opacity = 1;
-      if (abs === 0) {
-        transform = 'translateX(-50%) translateX(0px) scale(1) rotateY(0deg)';
-      } else {
-        const sign = offset > 0 ? 1 : -1;
-        const baseW = 200; // px，与中间海报宽度（sm）一致
-        const x = sign * (baseW * 0.62 + (abs - 1) * baseW * 0.42);
-        transform = `translateX(-50%) translateX(${x}px) scale(0.78) rotateY(${sign * -55}deg)`;
-        opacity = abs >= MAX_DEPTH ? 0.25 : 0.75 - (abs - 1) * 0.15;
-      }
-      return { g, i, offset, hidden: false as const, transform, opacity, z: 100 - abs };
-    });
-  }, [groups, active]);
+  const center = items[clamp(active)];
 
   return (
     <div className="w-full select-none">
       <div
         className="relative mx-auto h-[340px] sm:h-[400px] w-full max-w-5xl"
-        style={{ perspective: '1400px', touchAction: 'pan-y', cursor: drag.current ? 'grabbing' : 'grab' }}
+        style={{ perspective: '1400px', touchAction: 'pan-y', cursor: 'grab' }}
         onWheel={onWheel}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
@@ -119,25 +117,38 @@ export function CoverFlow({ groups, onOpen }: CoverFlowProps) {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </button>
 
-        {cards.map((c) => {
-          if (c.hidden) return null;
-          const g = c.g;
-          const isCenter = c.i === active;
+        {items.map((item, i) => {
+          const offset = i - active;
+          const abs = Math.abs(offset);
+          if (abs > MAX_DEPTH) return null;
+          const isCenter = i === active;
+          let transform: string;
+          let opacity = 1;
+          if (abs === 0) {
+            transform = 'translateX(-50%) translateX(0px) scale(1) rotateY(0deg)';
+          } else {
+            const sign = offset > 0 ? 1 : -1;
+            const baseW = 200; // px，与中间海报宽度（sm）一致
+            const x = sign * (baseW * 0.62 + (abs - 1) * baseW * 0.42);
+            transform = `translateX(-50%) translateX(${x}px) scale(0.78) rotateY(${sign * -55}deg)`;
+            opacity = abs >= MAX_DEPTH ? 0.25 : 0.75 - (abs - 1) * 0.15;
+          }
+          const pic = picOf?.(item);
           return (
             <button
-              key={g.key}
+              key={keyOf(item)}
               type="button"
-              onClick={() => (isCenter ? onOpen(g) : go(c.i))}
-              aria-label={g.name}
+              onClick={() => (isCenter ? onOpen(item) : go(i))}
+              aria-label={titleOf(item)}
               className="absolute left-1/2 top-4 sm:top-6 outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded-xl"
               style={{
                 width: 'clamp(150px, 34vw, 210px)',
                 aspectRatio: '2 / 3',
-                transform: c.transform,
+                transform,
                 transformStyle: 'preserve-3d',
                 transition: 'transform 0.55s cubic-bezier(0.22,0.75,0.22,1), opacity 0.4s ease',
-                zIndex: c.z,
-                opacity: c.opacity,
+                zIndex: 100 - abs,
+                opacity,
                 cursor: 'pointer',
                 ...(isCenter
                   ? { WebkitBoxReflect: 'below 6px linear-gradient(transparent 62%, rgba(0,0,0,0.35))' }
@@ -145,17 +156,28 @@ export function CoverFlow({ groups, onOpen }: CoverFlowProps) {
               } as React.CSSProperties}
             >
               <span
-                className="block w-full h-full overflow-hidden rounded-xl bg-chip shadow-2xl ring-1 ring-black/10 dark:ring-white/15"
+                className="block w-full h-full overflow-hidden rounded-xl bg-chip ring-1 ring-black/10 dark:ring-white/15"
                 style={{ boxShadow: isCenter ? '0 24px 60px rgba(0,0,0,0.45)' : '0 10px 30px rgba(0,0,0,0.35)' }}
               >
-                {g.pic ? (
-                  <SmartImage
-                    url={g.pic}
-                    mode={imageProxyMode}
-                    customProxy={customImageProxy}
-                    alt={g.name}
-                    className="h-full w-full object-cover pointer-events-none"
-                  />
+                {pic ? (
+                  proxyImage ? (
+                    <SmartImage
+                      url={pic}
+                      mode={imageProxyMode}
+                      customProxy={customImageProxy}
+                      alt={titleOf(item)}
+                      className="h-full w-full object-cover pointer-events-none"
+                    />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={pic}
+                      alt={titleOf(item)}
+                      loading="lazy"
+                      className="h-full w-full object-cover pointer-events-none"
+                      draggable={false}
+                    />
+                  )
                 ) : (
                   <span className="h-full w-full flex items-center justify-center text-faint">
                     <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 4v16m10-16v16M4 6h2v12H4zm4 0h2v12H8zm8 0h2v12h-2zm4 0h2v12h-2z" /></svg>
@@ -170,19 +192,17 @@ export function CoverFlow({ groups, onOpen }: CoverFlowProps) {
       {/* 中间海报信息 */}
       {center && (
         <div className="text-center -mt-2 sm:mt-1 px-6">
-          <h2 className="text-base sm:text-lg font-semibold text-content line-clamp-1">{center.name}</h2>
-          <p className="text-xs text-muted mt-1 line-clamp-1">
-            {[center.year, center.typeName, center.items.length > 1 ? `${center.items.length} 个来源` : center.items[0]?.sourceName]
-              .filter(Boolean)
-              .join(' · ')}
-          </p>
+          <h2 className="text-base sm:text-lg font-semibold text-content line-clamp-1">{titleOf(center)}</h2>
+          {metaOf?.(center) && (
+            <p className="text-xs text-muted mt-1 line-clamp-1">{metaOf(center)}</p>
+          )}
           <button
             type="button"
             onClick={() => onOpen(center)}
             className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black px-5 py-2 text-sm font-medium hover:opacity-90 transition"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-            观看
+            {actionLabel}
           </button>
           <p className="mt-3 text-[11px] text-faint">
             {active + 1} / {length} · 拖动、滚轮或点击两侧海报切换

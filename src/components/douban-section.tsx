@@ -6,7 +6,7 @@ import { api } from '@/lib/client-api';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import type { DoubanItem } from '@/lib/types';
-import { DoubanCard } from './video-card';
+import { CoverFlow } from './cover-flow';
 
 const MOVIE_TAGS = ['热门', '最新', '经典', '豆瓣高分', '冷门佳片', '华语', '欧美', '韩国', '日本', '动画'];
 const TV_TAGS = ['热门', '美剧', '英剧', '韩剧', '日剧', '国产剧', '港剧', '日本动画', '综艺', '纪录片'];
@@ -83,11 +83,15 @@ function DoubanView({ onPick }: { onPick: (title: string) => void }) {
       ) : items.length === 0 ? (
         <p className="text-center text-sm text-faint py-8">该分类暂无推荐内容</p>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
-          {items.map((item) => (
-            <DoubanCard key={item.id} item={item} onClick={() => onPick(item.title)} />
-          ))}
-        </div>
+        <CoverFlow
+          items={items}
+          keyOf={(item) => item.id}
+          titleOf={(item) => item.title}
+          picOf={(item) => item.cover}
+          metaOf={(item) => (item.rating ? `豆瓣评分 ${item.rating}` : undefined)}
+          onOpen={(item) => onPick(item.title)}
+          actionLabel="搜索这部"
+        />
       )}
     </section>
   );
@@ -127,11 +131,15 @@ function BangumiView({ onPick }: { onPick: (title: string) => void }) {
       ) : query.isLoading ? (
         <GridSkeleton />
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
-          {items.map((item) => (
-            <DoubanCard key={item.id} item={item} onClick={() => onPick(item.title)} />
-          ))}
-        </div>
+        <CoverFlow
+          items={items}
+          keyOf={(item) => item.id}
+          titleOf={(item) => item.title}
+          picOf={(item) => item.cover}
+          metaOf={(item) => (item.rating ? `豆瓣评分 ${item.rating}` : undefined)}
+          onOpen={(item) => onPick(item.title)}
+          actionLabel="搜索这部"
+        />
       )}
     </section>
   );
@@ -172,11 +180,15 @@ function HotListView({ onPick }: { onPick: (title: string) => void }) {
       ) : query.isLoading ? (
         <GridSkeleton />
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
-          {items.map((item) => (
-            <DoubanCard key={item.id} item={item} onClick={() => onPick(item.title)} />
-          ))}
-        </div>
+        <CoverFlow
+          items={items}
+          keyOf={(item) => item.id}
+          titleOf={(item) => item.title}
+          picOf={(item) => item.cover}
+          metaOf={(item) => (item.rating ? `豆瓣评分 ${item.rating}` : undefined)}
+          onOpen={(item) => onPick(item.title)}
+          actionLabel="搜索这部"
+        />
       )}
     </section>
   );
