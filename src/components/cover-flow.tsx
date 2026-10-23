@@ -56,6 +56,8 @@ export function CoverFlow({ groups, onOpen }: CoverFlowProps) {
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
+    // 按钮（箭头、海报）上的按下不启动拖拽，避免吞掉 click
+    if ((e.target as HTMLElement).closest('button')) return;
     drag.current = { x: e.clientX, active };
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
