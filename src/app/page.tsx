@@ -6,7 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/header';
 import { RecommendSection } from '@/components/douban-section';
 import { DetailModal } from '@/components/detail-modal';
-import { AggregatedCard, aggregateResults } from '@/components/video-card';
+import { aggregateResults } from '@/components/video-card';
+import { CoverFlow } from '@/components/cover-flow';
 import { useAppStore, resolveSource, isInDisabledSubscription, isSourceDisabled } from '@/lib/store';
 import { api } from '@/lib/client-api';
 import type { SearchResultItem, SourceSearchOutcome } from '@/lib/types';
@@ -330,16 +331,10 @@ function HomeContent() {
               <NoSourceGuide hasSources={customAPIs.length > 0 || envSources.length > 0} />
             ) : list.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
-                  {visibleGroups.map((group) => (
-                    <AggregatedCard
-                      key={group.key}
-                      group={group}
-                      sources={selectedSources}
-                      onOpen={(item) => setDetailItem(item)}
-                    />
-                  ))}
-                </div>
+                <CoverFlow
+                  groups={visibleGroups}
+                  onOpen={(group) => setDetailItem(group.items[0])}
+                />
                 {groups.length > visibleCount && (
                   <div className="flex justify-center mt-4">
                     <button
