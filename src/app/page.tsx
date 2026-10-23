@@ -168,7 +168,7 @@ function HomeContent() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="relative flex-1 max-w-6xl w-full mx-auto px-4 py-6">
+      <main className="relative flex-1 max-w-6xl w-full mx-auto pl-4 pr-14 sm:pr-16 py-6">
         {/* 首屏氛围渐变 */}
         {!urlQuery && (
           <div

@@ -11,7 +11,7 @@ import { Icon } from './icon';
 import { SearchHistoryDropdown, useSearchHistory } from './search-history';
 import { cn } from '@/lib/utils';
 
-/** 顶部导航：Logo、搜索框（首页外）、历史、设置 */
+/** 顶部导航：Logo、搜索框（首页外）；功能入口收进右侧竖直停靠栏 */
 export function Header({ showSearch = false }: { showSearch?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -94,28 +94,42 @@ export function Header({ showSearch = false }: { showSearch?: boolean }) {
             </form>
           )}
 
-          <div className="flex-1 sm:hidden" />
-
-          <nav className="flex items-center gap-1 ml-auto">
-            <HeaderLink href="/live" active={pathname === '/live'}>
-              直播
-            </HeaderLink>
-            <HeaderLink href="/about" active={pathname === '/about'}>
-              关于
-            </HeaderLink>
-            <ThemeToggle />
-            <IconButton label="观看历史" onClick={() => setHistoryOpen(true)}>
-              <Icon name="clock" />
-            </IconButton>
-            <IconButton label="下载管理" onClick={requestShowDownloadManager}>
-              <Icon name="download" />
-            </IconButton>
-            <IconButton label="设置" onClick={() => setSettingsOpen(true)}>
-              <Icon name="gear" />
-            </IconButton>
-          </nav>
+          <div className="flex-1" />
         </div>
       </header>
+
+      {/* 右侧竖直停靠栏：直播 / 关于 / 主题 / 历史 / 下载 / 设置 */}
+      <nav
+        aria-label="快捷功能"
+        className="fixed right-2 sm:right-3 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-0.5 rounded-2xl border border-line bg-surface/80 backdrop-blur-xl p-1.5 shadow-lg"
+      >
+        <DockLink href="/live" label="直播" active={pathname === '/live'}>
+          {/* 直播：信号塔 + 电波 */}
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5.5 19.5h13M12 15.5l-4.5 4M12 15.5l4.5 4M12 15.5V9M12 9a3.5 3.5 0 013.5 3.5M12 9a3.5 3.5 0 00-3.5 3.5M8.2 6.7a5.5 5.5 0 017.6 0M5.9 4.4a8.7 8.7 0 0112.2 0" />
+          </svg>
+        </DockLink>
+        <DockLink href="/about" label="关于" active={pathname === '/about'}>
+          {/* 关于：i 信息 */}
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" strokeWidth={1.8} />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 11v5M12 7.6h.01" />
+          </svg>
+        </DockLink>
+
+        <div className="w-5 h-px bg-line my-1" aria-hidden="true" />
+
+        <ThemeToggle />
+        <DockButton label="观看历史" onClick={() => setHistoryOpen(true)}>
+          <Icon name="clock" />
+        </DockButton>
+        <DockButton label="下载管理" onClick={requestShowDownloadManager}>
+          <Icon name="download" />
+        </DockButton>
+        <DockButton label="设置" onClick={() => setSettingsOpen(true)}>
+          <Icon name="gear" />
+        </DockButton>
+      </nav>
 
       <SourceManagerDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <HistoryPanel open={historyOpen} onClose={() => setHistoryOpen(false)} />
@@ -123,13 +137,15 @@ export function Header({ showSearch = false }: { showSearch?: boolean }) {
   );
 }
 
-function HeaderLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
+function DockLink({ href, active, label, children }: { href: string; active: boolean; label: string; children: React.ReactNode }) {
   return (
     <Link
       href={href}
+      title={label}
+      aria-label={label}
       className={cn(
-        'px-2.5 py-1.5 rounded-md text-sm transition-colors',
-        active ? 'text-content bg-hover' : 'text-muted hover:text-content'
+        'p-2 rounded-xl transition-colors',
+        active ? 'text-content bg-hover' : 'text-muted hover:text-content hover:bg-hover'
       )}
     >
       {children}
@@ -137,10 +153,10 @@ function HeaderLink({ href, active, children }: { href: string; active: boolean;
   );
 }
 
-function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+function DockButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
-      className="p-2 rounded-md text-muted hover:text-content hover:bg-hover transition-colors"
+      className="p-2 rounded-xl text-muted hover:text-content hover:bg-hover transition-colors"
       title={label}
       aria-label={label}
       onClick={onClick}
