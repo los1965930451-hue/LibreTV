@@ -35,6 +35,7 @@ export function CoverFlow<T>({
   actionLabel = '观看',
 }: CoverFlowProps<T>) {
   const [active, setActive] = useState(0);
+  const [failed, setFailed] = useState<Record<string, boolean>>({});
   const imageProxyMode = useAppStore((s) => s.imageProxyMode);
   const customImageProxy = useAppStore((s) => s.customImageProxy);
   const wheelLock = useRef(0);
@@ -42,11 +43,23 @@ export function CoverFlow<T>({
 
   const length = items.length;
   const firstKey = length > 0 ? keyOf(items[0]) : '';
-  // 新一次搜索 / 列表切换时回到第一张
+  // 新一次搜索 / 列表切换时回到第一张并清空失败记录
   useEffect(() => {
     setActive(0);
+    setFailed({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstKey]);
+
+  // 切到中间的海报重挂载图片组件，重新走一遍直连→镜像降级链
+  useEffect(() => {
+    setFailed((f) => {
+      if (!f[firstKey + active]) return f;
+      const next = { ...f };
+      delete next[firstKey + active];
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, firstKey]);
 
   const clamp = useCallback((i: number) => Math.max(0, Math.min(length - 1, i)), [length]);
   const go = useCallback((i: number) => setActive((v) => clamp(i)), [clamp]);
@@ -131,6 +144,8 @@ export function CoverFlow<T>({
             opacity = abs >= MAX_DEPTH ? 0.25 : 0.75 - (abs - 1) * 0.15;
           }
           const pic = picOf?.(item);
+          const itemKey = keyOf(item);
+          const imgFailed = failed[firstKey + i];
           return (
             <button
               key={keyOf(item)}
@@ -156,13 +171,16 @@ export function CoverFlow<T>({
                 className="block w-full h-full overflow-hidden rounded-xl bg-chip ring-1 ring-black/10 dark:ring-white/15"
                 style={{ boxShadow: isCenter ? '0 24px 60px rgba(0,0,0,0.45)' : '0 10px 30px rgba(0,0,0,0.35)' }}
               >
-                {pic ? (
+                {pic && !imgFailed ? (
                   <SmartImage
+                    key={isCenter ? `center-${itemKey}` : itemKey}
                     url={pic}
                     mode={imageProxyMode}
                     customProxy={customImageProxy}
                     alt={titleOf(item)}
+                    loading={isCenter ? 'eager' : 'lazy'}
                     className="h-full w-full object-cover pointer-events-none"
+                    onExhausted={() => setFailed((f) => ({ ...f, [firstKey + i]: true }))}
                   />
                 ) : (
                   <span className="h-full w-full flex items-center justify-center text-faint">
