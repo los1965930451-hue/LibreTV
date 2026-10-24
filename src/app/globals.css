@@ -2,13 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 品牌艺术字（Manrope，自托管 latin） */
+/* 品牌艺术字（Baloo 2，自托管 latin，圆润粗体，Moto 风格） */
 @font-face {
-  font-family: 'Manrope';
+  font-family: 'Baloo 2';
   font-style: normal;
-  font-weight: 200 800;
+  font-weight: 800;
   font-display: swap;
-  src: url('/fonts/manrope-latin.woff2') format('woff2');
+  src: url('/fonts/baloo2-latin.woff2') format('woff2');
 }
 
 /*
@@ -159,17 +159,17 @@ body {
   color: rgb(var(--c-on-accent)) !important;
 }
 
-/* 品牌渐变字（露露紫 · 赵露思应援色，Manrope 设计字体） */
+/* 品牌渐变字（露露紫 · 赵露思应援色，Baloo 2 圆润字体） */
 .brand-gradient {
-  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'SF Pro Display',
-    'PingFang SC', 'Helvetica Neue', sans-serif;
-  font-weight: 700;
+  font-family: 'Baloo 2', -apple-system, BlinkMacSystemFont, 'PingFang SC',
+    'Helvetica Neue', sans-serif;
+  font-weight: 800;
   background: linear-gradient(180deg, #e0c6ff 0%, #b78cf2 48%, #8a5ae0 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
 }
 
 /* LIVE 呼吸红点（直播页标识） */
