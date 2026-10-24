@@ -184,8 +184,8 @@ function HomeContent() {
         {/* 搜索区 */}
         <section className={cn('flex flex-col items-center', urlQuery ? 'mb-6' : 'mt-8 mb-8')}>
           {!urlQuery && (
-            <header className="text-center mb-6">
-              <h1 className="relative -top-6 text-4xl sm:text-5xl font-bold leading-[1.25] pb-1 brand-gradient">tkyTV</h1>
+            <header className="text-center -mt-6 mb-12">
+              <h1 className="text-4xl sm:text-5xl font-bold leading-[1.25] pb-1 brand-gradient">tkyTV</h1>
             </header>
           )}
           {urlQuery && <h1 className="sr-only">tkyTV 视频搜索</h1>}
