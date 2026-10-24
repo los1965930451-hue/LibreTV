@@ -150,14 +150,15 @@ body {
   color: rgb(var(--c-on-accent)) !important;
 }
 
-/* 品牌渐变字（黑白金属银，Apple 质感） */
+/* 品牌渐变字（露露紫 · 赵露思应援色） */
 .brand-gradient {
-  background: linear-gradient(180deg, #ffffff 0%, #d7d7dc 45%, #9a9aa0 100%);
+  background: linear-gradient(180deg, #e0c6ff 0%, #b78cf2 48%, #8a5ae0 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
   letter-spacing: -0.02em;
+  filter: drop-shadow(0 2px 12px rgba(150, 100, 230, 0.35));
 }
 
 /* LIVE 呼吸红点（直播页标识） */
