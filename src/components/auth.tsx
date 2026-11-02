@@ -194,8 +194,8 @@ function LoginModal({
           </>
         ) : (
           <>
-            <h2 className="text-lg font-semibold text-content mb-1">访问验证</h2>
-            <p className="text-sm text-muted mb-4">请输入密码继续访问</p>
+            <h2 className="text-lg font-semibold text-content mb-1">懂的都懂</h2>
+            <p className="text-sm text-muted mb-4">懂的都懂</p>
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -208,7 +208,7 @@ function LoginModal({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input w-full"
-                placeholder="密码"
+                placeholder="你知道的"
                 autoComplete="current-password"
               />
               {error && <p className="mt-2 text-sm text-danger">{error}</p>}
