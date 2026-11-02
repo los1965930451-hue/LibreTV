@@ -389,7 +389,7 @@ function CoverFlowSkeleton() {
     opacity: depth === 1 ? 0.75 : 0.6,
   });
   const poster =
-    'absolute left-1/2 top-4 sm:top-6 rounded-xl bg-chip ring-1 ring-black/10 dark:ring-white/15 animate-pulse';
+    'absolute left-1/2 top-4 sm:top-6 rounded-xl skeleton-glass ring-1 ring-black/10 dark:ring-white/15';
   return (
     <div className="w-full select-none">
       <div
@@ -410,19 +410,18 @@ function CoverFlowSkeleton() {
           ))
         )}
         <div
-          className={poster}
+          className={poster + ' shadow-2xl shadow-black/25'}
           style={{
             width: 'clamp(150px, 34vw, 210px)',
             aspectRatio: '2 / 3',
             transform: 'translateX(-50%)',
-            boxShadow: '0 24px 60px rgba(0,0,0,0.25)',
           }}
         />
       </div>
       <div className="flex flex-col items-center gap-2.5 -mt-2 sm:mt-1 px-6">
-        <div className="h-5 w-40 rounded bg-chip animate-pulse" />
-        <div className="h-3 w-56 rounded bg-chip animate-pulse" />
-        <div className="mt-2 h-9 w-24 rounded-full bg-chip animate-pulse" />
+        <div className="h-5 w-40 rounded skeleton-glass" />
+        <div className="h-3 w-56 rounded skeleton-glass" />
+        <div className="mt-2 h-9 w-24 rounded-full skeleton-glass" />
       </div>
     </div>
   );
