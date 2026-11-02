@@ -6,8 +6,8 @@ import { useAuth } from '@/components/auth';
 export function SiteFooter() {
   const { version } = useAuth();
   return (
-    <footer className="py-2 pr-2">
-      <p className="text-right text-[10px] leading-tight text-faint opacity-40 select-none">
+    <footer className="py-1 pr-1.5">
+      <p className="text-right text-[9px] leading-tight text-faint opacity-30 select-none">
         tkyTV{version ? ` v${version}` : ''} · Powered by LibreTV · AGPL-3.0
       </p>
     </footer>
