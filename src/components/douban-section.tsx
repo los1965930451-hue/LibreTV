@@ -7,6 +7,7 @@ import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import type { DoubanItem } from '@/lib/types';
 import { CoverFlow } from './cover-flow';
+import { CoverFlowSkeleton } from './cover-flow-skeleton';
 
 const MOVIE_TAGS = ['热门', '最新', '经典', '豆瓣高分', '冷门佳片', '华语', '欧美', '韩国', '日本', '动画'];
 const TV_TAGS = ['热门', '美剧', '英剧', '韩剧', '日剧', '国产剧', '港剧', '日本动画', '综艺', '纪录片'];
@@ -79,7 +80,7 @@ function DoubanView({ onPick }: { onPick: (title: string) => void }) {
       {query.isError ? (
         <p className="text-center text-sm text-faint py-8">推荐内容加载失败，可稍后重试或在设置中关闭</p>
       ) : query.isLoading ? (
-        <GridSkeleton />
+        <CoverFlowSkeleton />
       ) : items.length === 0 ? (
         <p className="text-center text-sm text-faint py-8">该分类暂无推荐内容</p>
       ) : (
@@ -129,7 +130,7 @@ function BangumiView({ onPick }: { onPick: (title: string) => void }) {
       {query.isError ? (
         <p className="text-center text-sm text-faint py-8">推荐内容加载失败，可稍后重试或在设置中关闭</p>
       ) : query.isLoading ? (
-        <GridSkeleton />
+        <CoverFlowSkeleton />
       ) : (
         <CoverFlow
           items={items}
@@ -178,7 +179,7 @@ function HotListView({ onPick }: { onPick: (title: string) => void }) {
       {query.isError ? (
         <p className="text-center text-sm text-faint py-8">推荐内容加载失败，可稍后重试或在设置中关闭</p>
       ) : query.isLoading ? (
-        <GridSkeleton />
+        <CoverFlowSkeleton />
       ) : (
         <CoverFlow
           items={items}
@@ -191,19 +192,6 @@ function HotListView({ onPick }: { onPick: (title: string) => void }) {
         />
       )}
     </section>
-  );
-}
-
-function GridSkeleton() {
-  return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2.5">
-      {Array.from({ length: 16 }).map((_, i) => (
-        <div key={i}>
-          <div className="aspect-[2/3] rounded-lg skeleton-glass" />
-          <div className="h-3 mt-2 rounded skeleton-glass" />
-        </div>
-      ))}
-    </div>
   );
 }
 
