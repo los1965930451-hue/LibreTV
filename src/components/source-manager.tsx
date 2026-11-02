@@ -9,7 +9,6 @@ import {
   HealthBadge,
   SearchInput,
   SectionTitle,
-  SelectRow,
   TestBadge,
   ToggleRow,
   Switch,
@@ -32,67 +31,55 @@ import { syncSourceSubscription } from '@/lib/subscription-sync';
 import { describeParseStats } from '@/lib/tvbox-parser';
 
 /**
- * 设置抽屉：顶部两级导航。
- * - 一级按性质分组：源管理 / 偏好设置 / 数据；
- * - 二级为该分组下的具体面板，每次只渲染一类内容，避免源很多时长距离滚动。
+ * 设置抽屉：纵向导航布局。
+ * 左侧为竖直分组导航（组标题 + 全宽条目，上下方向键切换），右侧渲染当前面板。
  * 选中位置记忆到 localStorage，再次打开回到上次所在面板。
  */
 
-type PrimaryTab = 'sources' | 'prefs' | 'data';
-type SecondaryTab = 'vod' | 'live' | 'subs' | 'playback' | 'image' | 'home' | 'io';
+type SettingsPanelId = 'vod' | 'live' | 'subs' | 'playback' | 'io';
 
-const PRIMARY_TABS: { id: PrimaryTab; label: string; icon: IconName }[] = [
-  { id: 'sources', label: '源管理', icon: 'link' },
-  { id: 'prefs', label: '偏好设置', icon: 'gear' },
-  { id: 'data', label: '数据', icon: 'download' },
+const NAV_GROUPS: { title: string; items: { id: SettingsPanelId; label: string; icon: IconName }[] }[] = [
+  {
+    title: '源管理',
+    items: [
+      { id: 'vod', label: '点播源', icon: 'link' },
+      { id: 'live', label: '直播源', icon: 'bolt' },
+      { id: 'subs', label: '数据源订阅', icon: 'download' },
+    ],
+  },
+  {
+    title: '偏好设置',
+    items: [{ id: 'playback', label: '播放与过滤', icon: 'gear' }],
+  },
+  {
+    title: '数据',
+    items: [{ id: 'io', label: '配置导入导出', icon: 'download' }],
+  },
 ];
 
-const SECONDARY_TABS: Record<PrimaryTab, { id: SecondaryTab; label: string }[]> = {
-  sources: [
-    { id: 'vod', label: '点播源' },
-    { id: 'live', label: '直播源' },
-    { id: 'subs', label: '数据源订阅' },
-  ],
-  prefs: [
-    { id: 'playback', label: '播放与过滤' },
-    { id: 'image', label: '封面图加载' },
-    { id: 'home', label: '首页与内容' },
-  ],
-  data: [{ id: 'io', label: '配置导入导出' }],
-};
-
+const ALL_PANELS = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.id));
 const TAB_STORAGE_KEY = 'libretv-settings-tab';
 
 export function SourceManagerDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [primary, setPrimary] = useState<PrimaryTab>('sources');
-  const [secondary, setSecondary] = useState<Record<PrimaryTab, SecondaryTab>>({
-    sources: 'vod',
-    prefs: 'playback',
-    data: 'io',
-  });
+  const [active, setActive] = useState<SettingsPanelId>('vod');
 
-  // 挂载后读取上次位置（不在渲染期读 localStorage，避免 SSR/hydration 不一致）
+  // 挂载后读取上次位置（兼容旧版两级横排结构；已下线的 image/home 回落到 playback）
   useEffect(() => {
     try {
       const raw = localStorage.getItem(TAB_STORAGE_KEY);
       if (!raw) return;
-      const saved = JSON.parse(raw) as {
-        primary?: PrimaryTab;
-        secondary?: Partial<Record<PrimaryTab, SecondaryTab>>;
-      };
-      // 旧版把「数据源订阅」放在「数据」下，现已迁至「源管理」：自动重定向到新位置
-      const migratedSubs = saved.secondary?.data === 'subs';
-      const targetPrimary = migratedSubs && saved.primary === 'data' ? 'sources' : saved.primary;
-      if (targetPrimary && SECONDARY_TABS[targetPrimary]) setPrimary(targetPrimary);
-      setSecondary((prev) => {
-        const next = { ...prev };
-        if (migratedSubs) next.sources = 'subs';
-        for (const key of Object.keys(SECONDARY_TABS) as PrimaryTab[]) {
-          const v = saved.secondary?.[key];
-          if (v && SECONDARY_TABS[key].some((t) => t.id === v)) next[key] = v;
-        }
-        return next;
-      });
+      let id: string | undefined;
+      if (raw.trim().startsWith('{')) {
+        const saved = JSON.parse(raw) as {
+          primary?: string;
+          secondary?: Record<string, string>;
+        };
+        id = saved.primary && saved.secondary ? saved.secondary[saved.primary] : undefined;
+      } else {
+        id = raw.replace(/["']/g, '');
+      }
+      if (id === 'image' || id === 'home') id = 'playback';
+      if (id && (ALL_PANELS as string[]).includes(id)) setActive(id as SettingsPanelId);
     } catch {
       /* 本地记录损坏时忽略，回到默认面板 */
     }
@@ -100,108 +87,76 @@ export function SourceManagerDrawer({ open, onClose }: { open: boolean; onClose:
 
   useEffect(() => {
     try {
-      localStorage.setItem(TAB_STORAGE_KEY, JSON.stringify({ primary, secondary }));
+      localStorage.setItem(TAB_STORAGE_KEY, active);
     } catch {
       /* 隐私模式等无法写入时忽略 */
     }
-  }, [primary, secondary]);
+  }, [active]);
 
-  const current = secondary[primary];
-
-  return (
-    <Drawer
-      open={open}
-      onClose={onClose}
-      title="设置"
-      resetScrollKey={current}
-      subheader={
-        <div className="space-y-2">
-          <TabRow tabs={PRIMARY_TABS} value={primary} onChange={setPrimary} variant="primary" ariaLabel="设置分类" />
-          {/* 分组下只有一项时无需二级导航，直接展示该面板 */}
-          {SECONDARY_TABS[primary].length > 1 && (
-            <TabRow
-              tabs={SECONDARY_TABS[primary]}
-              value={current}
-              onChange={(id) => setSecondary((prev) => ({ ...prev, [primary]: id }))}
-              variant="secondary"
-              ariaLabel="设置项"
-            />
-          )}
-        </div>
-      }
-    >
-      {current === 'vod' && <VodSourcesPanel />}
-      {current === 'live' && <LiveSourceManager />}
-      {current === 'playback' && <PlaybackPanel />}
-      {current === 'image' && <ImagePanel />}
-      {current === 'home' && <HomePanel />}
-      {current === 'subs' && <SourceSubscriptions />}
-      {current === 'io' && <ConfigIoPanel />}
-    </Drawer>
-  );
-}
-
-/** 一级/二级导航条（role=tablist，左右方向键切换） */
-function TabRow<T extends string>({
-  tabs,
-  value,
-  onChange,
-  variant,
-  ariaLabel,
-}: {
-  tabs: { id: T; label: string; icon?: IconName }[];
-  value: T;
-  onChange: (id: T) => void;
-  variant: 'primary' | 'secondary';
-  ariaLabel: string;
-}) {
   const move = (dir: 1 | -1) => {
-    const idx = tabs.findIndex((t) => t.id === value);
-    onChange(tabs[(idx + dir + tabs.length) % tabs.length].id);
+    const idx = ALL_PANELS.indexOf(active);
+    setActive(ALL_PANELS[(idx + dir + ALL_PANELS.length) % ALL_PANELS.length]);
   };
+
   return (
-    <div
-      role="tablist"
-      aria-label={ariaLabel}
-      className={cn('flex w-full gap-1', variant === 'primary' && 'p-0.5 bg-chip rounded-lg')}
-      onKeyDown={(e) => {
-        if (e.key === 'ArrowRight') {
-          e.preventDefault();
-          move(1);
-        } else if (e.key === 'ArrowLeft') {
-          e.preventDefault();
-          move(-1);
-        }
-      }}
-    >
-      {tabs.map((t) => {
-        const active = t.id === value;
-        return (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={active}
-            className={cn(
-              // 两级导航都等宽撑满一行（原先二级按内容宽度、超宽才横滚，与一级不一致）
-              'flex-1 min-w-0 inline-flex items-center justify-center gap-1 whitespace-nowrap rounded-md transition-colors',
-              variant === 'primary'
-                ? cn(
-                    'px-2 py-1.5 text-xs',
-                    active ? 'bg-surface-raised text-accent font-medium shadow-sm' : 'text-muted hover:text-content'
-                  )
-                : cn(
-                    'px-2.5 py-1 text-xs',
-                    active ? 'bg-accent/10 text-accent font-medium' : 'text-muted hover:text-content hover:bg-hover'
-                  )
-            )}
-            onClick={() => onChange(t.id)}
-          >
-            {t.icon && <Icon name={t.icon} className="w-3.5 h-3.5" />}
-            {t.label}
-          </button>
-        );
-      })}
-    </div>
+    <Drawer open={open} onClose={onClose} title="设置" resetScrollKey={active}>
+      <div className="flex gap-3">
+        {/* 竖直导航栏 */}
+        <nav
+          aria-label="设置导航"
+          className="w-24 shrink-0"
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              move(1);
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              move(-1);
+            }
+          }}
+        >
+          {NAV_GROUPS.map((g) => (
+            <div key={g.title} className="mb-3">
+              <div className="px-1.5 mb-1 text-[10px] uppercase tracking-wider text-faint/70 select-none">
+                {g.title}
+              </div>
+              <div className="space-y-0.5">
+                {g.items.map((item) => {
+                  const selected = item.id === active;
+                  return (
+                    <button
+                      key={item.id}
+                      role="tab"
+                      aria-selected={selected}
+                      onClick={() => setActive(item.id)}
+                      className={cn(
+                        'w-full flex items-center gap-1.5 pl-2.5 pr-1.5 py-2 rounded-lg text-left text-xs transition-colors',
+                        'border-l-2',
+                        selected
+                          ? 'bg-accent/10 text-accent font-medium border-accent'
+                          : 'border-transparent text-muted hover:text-content hover:bg-hover'
+                      )}
+                    >
+                      <Icon name={item.icon} className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {/* 面板内容区 */}
+        <div className="flex-1 min-w-0">
+          {active === 'vod' && <VodSourcesPanel />}
+          {active === 'live' && <LiveSourceManager />}
+          {active === 'playback' && <PlaybackPanel />}
+          {active === 'subs' && <SourceSubscriptions />}
+          {active === 'io' && <ConfigIoPanel />}
+        </div>
+      </div>
+    </Drawer>
   );
 }
 
@@ -630,97 +585,6 @@ function VideoCachePanel() {
         </button>
       </div>
     </div>
-  );
-}
-
-function ImagePanel() {
-  const store = useAppStore();
-  const mode = store.imageProxyMode;
-  const description: Record<'direct' | 'proxy' | 'custom', string> = {
-    direct: '原站直连；豆瓣封面自动换公共镜像，仍失败回退内置代理。最省服务器流量',
-    proxy: '封面优先经本站服务器转发并伪装来源，失败自动回退公共镜像/直连。最稳定，消耗服务器流量',
-    custom: '使用你填写的模板转发封面图',
-  };
-  return (
-    <section>
-      <SectionTitle title="封面图加载" />
-      <div className="space-y-2">
-        <SelectRow
-          label="加载方式"
-          value={mode}
-          description={description[mode]}
-          onChange={(v) => store.updateSettings({ imageProxyMode: v as 'direct' | 'proxy' | 'custom' })}
-          options={[
-            { value: 'direct', label: '直连优先', hint: '最省服务器流量' },
-            { value: 'proxy', label: '内置代理', hint: '最稳定' },
-            { value: 'custom', label: '自定义', hint: '自建转发模板' },
-          ]}
-        />
-        {mode === 'custom' && <CustomProxyInput />}
-      </div>
-    </section>
-  );
-}
-
-/**
- * 自定义代理模板输入：本地即时回显 + 300ms 防抖写 store。
- * 直接每次按键写 store 会让全站封面 URL 重算并触发一轮图片重载（模板输入时缩略图持续闪烁）。
- */
-function CustomProxyInput() {
-  const value = useAppStore((s) => s.customImageProxy);
-  const updateSettings = useAppStore((s) => s.updateSettings);
-  const [draft, setDraft] = useState(value);
-
-  // 外部值变化（如导入配置）时同步回显
-  useEffect(() => setDraft(value), [value]);
-
-  useEffect(() => {
-    if (draft === value) return;
-    const timer = setTimeout(() => updateSettings({ customImageProxy: draft }), 300);
-    return () => clearTimeout(timer);
-  }, [draft, value, updateSettings]);
-
-  return (
-    <input
-      className="input w-full"
-      aria-label="自定义代理模板"
-      placeholder="代理模板，如 https://p.example.com/?url={url}"
-      value={draft}
-      onChange={(e) => setDraft(e.target.value)}
-    />
-  );
-}
-
-function HomePanel() {
-  const store = useAppStore();
-  return (
-    <section>
-      <SectionTitle title="首页与内容过滤" />
-      <div className="space-y-3">
-        <ToggleRow
-          label="成人内容过滤"
-          description="过滤“伦理片”等分类的结果"
-          checked={store.yellowFilter}
-          onChange={(v) => store.updateSettings({ yellowFilter: v })}
-        />
-        <ToggleRow
-          label="首页推荐"
-          description="在首页展示推荐内容"
-          checked={store.doubanEnabled}
-          onChange={(v) => store.updateSettings({ doubanEnabled: v })}
-        />
-        <SelectRow
-          label="推荐数据源"
-          value={store.recommendSource}
-          onChange={(v) => store.updateSettings({ recommendSource: v as 'douban' | 'bangumi' | 'hot-list' })}
-          options={[
-            { value: 'douban', label: '豆瓣', hint: '热门电影与剧集' },
-            { value: 'bangumi', label: 'Bangumi', hint: '每日新番放送（免 key）' },
-            { value: 'hot-list', label: '影视榜单', hint: '豆瓣周榜 / 百度热播' },
-          ]}
-        />
-      </div>
-    </section>
   );
 }
 
