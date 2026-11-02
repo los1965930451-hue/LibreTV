@@ -193,19 +193,23 @@ html:not(.dark) .skeleton-glass {
 html:not(.dark) .glass-accent {
   position: relative;
   isolation: isolate;
+  font-family: 'Baloo 2', 'PingFang SC', 'Hiragino Sans GB', 'YouYuan',
+    'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0) 38%),
-    linear-gradient(180deg, rgba(196, 158, 248, 0.82) 0%, rgba(150, 100, 228, 0.88) 55%, rgba(118, 68, 204, 0.92) 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.38);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 38%),
+    linear-gradient(180deg, rgba(182, 140, 240, 0.88) 0%, rgba(136, 84, 220, 0.92) 55%, rgba(102, 54, 190, 0.95) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.36);
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.72),
-    inset 0 -1px 1px rgba(60, 24, 120, 0.38),
+    inset 0 -1px 1px rgba(52, 20, 108, 0.42),
     inset 0 0 14px rgba(255, 255, 255, 0.16),
-    0 1px 2px rgba(60, 24, 120, 0.28),
-    0 10px 26px -8px rgba(138, 90, 224, 0.68),
-    0 0 0 0.5px rgba(138, 90, 224, 0.32);
-  backdrop-filter: blur(18px) saturate(190%) brightness(1.06);
-  -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.06);
+    0 1px 2px rgba(52, 20, 108, 0.30),
+    0 10px 26px -8px rgba(126, 78, 214, 0.72),
+    0 0 0 0.5px rgba(126, 78, 214, 0.36);
+  backdrop-filter: blur(18px) saturate(190%) brightness(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.05);
   transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
 }
 /* 斜向镜面光带（左上角掠射高光） */
@@ -221,15 +225,15 @@ html:not(.dark) .glass-accent::before {
 html:not(.dark) .glass-accent:hover {
   transform: translateY(-1px);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.36) 0%, rgba(255, 255, 255, 0) 40%),
-    linear-gradient(180deg, rgba(205, 170, 252, 0.88) 0%, rgba(140, 90, 222, 0.92) 55%, rgba(110, 60, 198, 0.95) 100%) !important;
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 255, 255, 0) 40%),
+    linear-gradient(180deg, rgba(192, 152, 246, 0.92) 0%, rgba(128, 76, 214, 0.95) 55%, rgba(96, 48, 184, 0.97) 100%) !important;
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.80),
-    inset 0 -1px 1px rgba(60, 24, 120, 0.38),
+    inset 0 -1px 1px rgba(52, 20, 108, 0.42),
     inset 0 0 16px rgba(255, 255, 255, 0.22),
-    0 2px 4px rgba(60, 24, 120, 0.30),
-    0 14px 32px -8px rgba(138, 90, 224, 0.75),
-    0 0 0 0.5px rgba(138, 90, 224, 0.40);
+    0 2px 4px rgba(52, 20, 108, 0.32),
+    0 14px 32px -8px rgba(126, 78, 214, 0.80),
+    0 0 0 0.5px rgba(126, 78, 214, 0.44);
 }
 html:not(.dark) .glass-accent:active {
   transform: translateY(0);
