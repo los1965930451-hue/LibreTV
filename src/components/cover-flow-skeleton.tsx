@@ -9,6 +9,7 @@ import type { CSSProperties } from 'react';
  */
 export function CoverFlowSkeleton() {
   const sideCls = (sign: 1 | -1, depth: 1 | 2): CSSProperties => ({
+    position: 'absolute',
     transform: `translateX(-50%) translateX(${sign * (124 + (depth - 1) * 84)}px) scale(0.78) rotateY(${sign * -55}deg)`,
     opacity: depth === 1 ? 0.75 : 0.6,
   });
@@ -36,6 +37,7 @@ export function CoverFlowSkeleton() {
         <div
           className={poster + ' shadow-2xl shadow-black/25'}
           style={{
+            position: 'absolute',
             width: 'clamp(150px, 34vw, 210px)',
             aspectRatio: '2 / 3',
             transform: 'translateX(-50%)',
