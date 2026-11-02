@@ -1,7 +1,7 @@
 /**
  * 触屏指针判定。
  *
- * 用途：播放器控制栏交互分流（issue LibreSpark/LibreTV#937）——
+ * 用途：播放器控制栏交互分流（历史 issue #937）——
  * 触屏设备没有 hover，控制栏只能靠「点按视频 toggle」显示/收起，
  * 任何自动隐藏（ArtPlayer 按 CONTROL_HIDE_TIME 计时收起）都会让按钮点不到；
  * 桌面鼠标维持「mousemove 显示 + 失去悬停收起」。

@@ -8,7 +8,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
  */
 
 export type ThemeChoice = 'light' | 'dark';
-const STORAGE_KEY = 'libretv-theme';
+const STORAGE_KEY = 'tkytv-theme';
 
 interface ThemeContextValue {
   theme: ThemeChoice;

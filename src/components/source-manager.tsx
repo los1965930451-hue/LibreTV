@@ -58,7 +58,7 @@ const NAV_GROUPS: { title: string; items: { id: SettingsPanelId; label: string; 
 ];
 
 const ALL_PANELS = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.id));
-const TAB_STORAGE_KEY = 'libretv-settings-tab';
+const TAB_STORAGE_KEY = 'tkytv-settings-tab';
 
 export function SourceManagerDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [active, setActive] = useState<SettingsPanelId>('vod');
@@ -592,7 +592,7 @@ function VideoCachePanel() {
 
 /**
  * 数据源订阅 / 分享：
- * - 订阅：填入远程订阅地址（LibreTV-SourceList JSON 或 TVBOX 配置 JSON，由服务端自动识别），
+ * - 订阅：填入远程订阅地址（tkyTV-SourceList JSON 或 TVBOX 配置 JSON，由服务端自动识别），
  *   一次拉取点播源与直播源，可随时重新同步；
  * - 分享：把当前点播源 + 直播源导出为同格式 JSON 文件，托管到任意位置即可被他人订阅。
  */
@@ -676,7 +676,7 @@ function SourceSubscriptions() {
 
     setPublishing(true);
     try {
-      const result = await api.publishSourceList({ name: 'LibreTV-SourceList', sources, liveSources });
+      const result = await api.publishSourceList({ name: 'tkyTV-SourceList', sources, liveSources });
       setPublished(result);
       toast(`已发布 ${result.sources} 个点播源、${result.liveSources} 个直播源到 ${result.provider}`, 'success');
     } catch (err) {
@@ -715,12 +715,12 @@ function SourceSubscriptions() {
       })
       .map(({ name, url, epg }) => ({ name: name || hostnameOf(url), url, epg }));
 
-    const payload = { name: 'LibreTV-SourceList', version: 2, exportedAt: Date.now(), sources, liveSources };
+    const payload = { name: 'tkyTV-SourceList', version: 2, exportedAt: Date.now(), sources, liveSources };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `LibreTV-SourceList_${Date.now()}.json`;
+    a.download = `tkyTV-SourceList_${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast(`已导出 ${sources.length} 个点播源、${liveSources.length} 个直播源，托管后即可被他人订阅`, 'success');
@@ -947,7 +947,7 @@ function ConfigIoPanel() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `LibreTV-Settings_${Date.now()}.json`;
+      a.download = `tkyTV-Settings_${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
       toast('配置已导出', 'success');
@@ -1021,7 +1021,7 @@ function summarizeConfig(text: string): string {
   } catch {
     throw new Error('文件不是合法的 JSON');
   }
-  if (cfg.name !== 'LibreTV-Settings') throw new Error('不是 tkyTV 的配置文件');
+  if (cfg.name !== 'tkyTV-Settings') throw new Error('不是 tkyTV 的配置文件');
 
   const parts: string[] = [];
   const settingsRaw = cfg.data?.[PERSIST_KEY];

@@ -10,7 +10,7 @@ export const ART_DEFAULT_CONTROL_HIDE_MS = 3000;
 /** 桌面：鼠标停止移动 / 离开播放器后快速收起 */
 export const DESKTOP_CONTROL_HIDE_MS = 800;
 /**
- * 触屏：永不自动隐藏（issue LibreSpark/LibreTV#937）。
+ * 触屏：永不自动隐藏（历史 issue #937）。
  * ArtPlayer 的判定是 `Date.now() - timer >= CONTROL_HIDE_TIME`，该差值是毫秒级，
  * 恒小于 MAX_SAFE_INTEGER，因此自动隐藏永不触发——由「点按视频 toggle」收起。
  */
