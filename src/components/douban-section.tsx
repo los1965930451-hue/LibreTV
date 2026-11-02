@@ -67,7 +67,7 @@ function DoubanView({ onPick }: { onPick: (title: string) => void }) {
             key={t}
             className={cn(
               'px-2.5 py-1 rounded-full text-xs transition-colors',
-              t === tag ? 'bg-accent text-on-accent' : 'bg-chip text-muted hover:text-content hover:bg-hover'
+              t === tag ? 'glass-accent bg-accent text-on-accent' : 'bg-chip text-muted hover:text-content hover:bg-hover'
             )}
             onClick={() => setTag(t)}
           >
@@ -212,7 +212,7 @@ function ChipButton({ active, onClick, children }: { active: boolean; onClick: (
     <button
       className={cn(
         'px-2.5 py-1 rounded-full text-xs transition-colors',
-        active ? 'bg-accent text-on-accent' : 'bg-chip text-muted hover:text-content hover:bg-hover'
+        active ? 'glass-accent bg-accent text-on-accent' : 'bg-chip text-muted hover:text-content hover:bg-hover'
       )}
       onClick={onClick}
     >
@@ -224,7 +224,7 @@ function ChipButton({ active, onClick, children }: { active: boolean; onClick: (
 function TypeButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
-      className={cn('px-3.5 py-1.5 rounded-md text-sm transition-colors', active ? 'bg-accent text-on-accent' : 'text-muted hover:text-content')}
+      className={cn('px-3.5 py-1.5 rounded-md text-sm transition-colors', active ? 'glass-accent bg-accent text-on-accent' : 'text-muted hover:text-content')}
       onClick={onClick}
       aria-pressed={active}
     >

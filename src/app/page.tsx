@@ -255,7 +255,7 @@ function HomeContent() {
                 <button
                   type="submit"
                   className={cn(
-                    'btn-primary shrink-0 px-4 font-medium transition-[background-color,filter] active:brightness-90',
+                    'btn-primary glass-accent shrink-0 px-4 font-medium transition-[background-color,filter] active:brightness-90',
                     '!rounded-l-none',
                     searchHistory.visible ? '!rounded-tr-xl !rounded-br-none' : '!rounded-r-xl'
                   )}
