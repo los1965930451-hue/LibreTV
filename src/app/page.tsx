@@ -16,7 +16,6 @@ import { cn, formatDisableTtl, validateSourceUrl } from '@/lib/utils';
 import { useToast } from '@/components/toast';
 import { EmptyState } from '@/components/states';
 import { Icon } from '@/components/icon';
-import { SiteFooter } from '@/components/site-footer';
 
 /**
  * 首页：搜索（URL ?s= 驱动，可后退/分享）+ 豆瓣推荐。
@@ -377,8 +376,6 @@ function HomeContent() {
           />
         )}
       </main>
-
-      <SiteFooter />
 
       <DetailModal item={detailItem} onClose={() => setDetailItem(null)} />
     </div>
