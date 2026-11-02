@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Header } from '@/components/header';
@@ -355,7 +355,7 @@ function HomeContent() {
                 )}
               </>
             ) : isSearching ? (
-              <ResultsSkeleton />
+              <CoverFlowSkeleton />
             ) : (
               <EmptyState
                 icon="search"
@@ -385,20 +385,48 @@ function HomeContent() {
   );
 }
 
-function ResultsSkeleton() {
+/** 搜索加载占位：形状与 Cover Flow 一致（中间大海报 + 两侧 3D 倾斜海报），避免加载到结果时布局跳变 */
+function CoverFlowSkeleton() {
+  const sideCls = (sign: 1 | -1, depth: 1 | 2): CSSProperties => ({
+    transform: `translateX(-50%) translateX(${sign * (124 + (depth - 1) * 84)}px) scale(0.78) rotateY(${sign * -55}deg)`,
+    opacity: depth === 1 ? 0.75 : 0.6,
+  });
+  const poster =
+    'absolute left-1/2 top-4 sm:top-6 rounded-xl bg-chip ring-1 ring-black/10 dark:ring-white/15 animate-pulse';
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        // 结构对齐真实结果卡（左侧缩略图 + 右侧文字块），避免占位与真实卡片形状不符
-        <div key={i} className="card flex h-28 overflow-hidden">
-          <div className="w-[105px] sm:w-[120px] shrink-0 bg-chip animate-pulse" />
-          <div className="flex-1 p-2.5 space-y-2">
-            <div className="h-4 w-3/4 rounded bg-chip animate-pulse" />
-            <div className="h-3 w-1/2 rounded bg-chip animate-pulse" />
-            <div className="h-3 w-full rounded bg-chip animate-pulse" />
-          </div>
-        </div>
-      ))}
+    <div className="w-full select-none">
+      <div
+        className="relative mx-auto h-[340px] sm:h-[400px] w-full max-w-5xl"
+        style={{ perspective: '1400px' }}
+      >
+        {([-1, 1] as const).map((s) =>
+          ([1, 2] as const).map((d) => (
+            <div
+              key={`${s}-${d}`}
+              className={poster}
+              style={{
+                width: 'clamp(150px, 34vw, 210px)',
+                aspectRatio: '2 / 3',
+                ...sideCls(s, d),
+              }}
+            />
+          ))
+        )}
+        <div
+          className={poster}
+          style={{
+            width: 'clamp(150px, 34vw, 210px)',
+            aspectRatio: '2 / 3',
+            transform: 'translateX(-50%)',
+            boxShadow: '0 24px 60px rgba(0,0,0,0.25)',
+          }}
+        />
+      </div>
+      <div className="flex flex-col items-center gap-2.5 -mt-2 sm:mt-1 px-6">
+        <div className="h-5 w-40 rounded bg-chip animate-pulse" />
+        <div className="h-3 w-56 rounded bg-chip animate-pulse" />
+        <div className="mt-2 h-9 w-24 rounded-full bg-chip animate-pulse" />
+      </div>
     </div>
   );
 }
