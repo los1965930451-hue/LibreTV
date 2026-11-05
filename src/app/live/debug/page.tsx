@@ -13,9 +13,39 @@ const TEST_STREAM =
 
 export default function LiveDebugPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const customVideoRef = useRef<HTMLVideoElement>(null);
   const [logs, setLogs] = useState<string[]>([]);
+  const [customUrl, setCustomUrl] = useState('');
   const log = (line: string) =>
-    setLogs((prev) => [`${new Date().toLocaleTimeString()}  ${line}`, ...prev].slice(0, 30));
+    setLogs((prev) => [`${new Date().toLocaleTimeString()}  ${line}`, ...prev].slice(0, 40));
+
+  /** 从粘贴的地址里提取真实流地址（支持直接粘 /live?url=... 页面地址） */
+  const extractStreamUrl = (raw: string): string => {
+    const m = raw.match(/[?&]url=([^&]+)/);
+    if (m) {
+      try { return decodeURIComponent(m[1]); } catch { return m[1]; }
+    }
+    return raw.trim();
+  };
+
+  const testCustomUrl = () => {
+    const target = extractStreamUrl(customUrl);
+    if (!target) return;
+    log(`开始测试频道: ${target}`);
+    if (target.startsWith('http://')) {
+      log('警告: 流地址是 HTTP 明文，HTTPS 页面会被 iOS 拦截（混合内容）');
+    }
+    const video = customVideoRef.current;
+    if (!video) return;
+    const onError = () =>
+      log(`频道播放失败: code=${video.error?.code} message=${video.error?.message || ''}`);
+    const onPlaying = () => log('频道播放成功: playing');
+    video.addEventListener('error', onError, { once: true });
+    video.addEventListener('playing', onPlaying, { once: true });
+    video.src = target;
+    video.load();
+    video.play().catch((e) => log(`play() 被拒绝: ${String(e)}`));
+  };
 
   useEffect(() => {
     const v = document.createElement('video');
@@ -66,6 +96,28 @@ export default function LiveDebugPage() {
         上方播放的是 Apple 官方 HTTPS 测试流。能出画面 = 手机本身没问题，问题在你的频道地址；
         不能播 = 设备/浏览器层面问题。
       </p>
+      <div className="flex flex-col gap-2">
+        <h2 className="text-sm font-bold">测试你失败的频道</h2>
+        <input
+          value={customUrl}
+          onChange={(e) => setCustomUrl(e.target.value)}
+          placeholder="粘贴 m3u8 流地址，或 /live?url=... 页面地址"
+          className="w-full bg-zinc-900 rounded-lg px-3 py-2 text-xs text-white placeholder:text-zinc-500"
+        />
+        <button
+          onClick={testCustomUrl}
+          className="bg-purple-600 text-white text-xs font-bold rounded-lg px-4 py-2"
+        >
+          测试这个频道
+        </button>
+        <video
+          ref={customVideoRef}
+          playsInline
+          muted
+          controls
+          className="w-full aspect-video bg-zinc-900 rounded-lg"
+        />
+      </div>
       <div className="text-[11px] leading-5 font-mono bg-zinc-900 rounded-lg p-3 break-all">
         {logs.map((l, i) => (
           <div key={i}>{l}</div>
