@@ -162,7 +162,6 @@ export function LivePlayer({ url, title, onPrevChannel, onNextChannel }: LivePla
         enableWorker: true,
         // 上游滑动窗仅 3 个分片，同步点必须落在窗口内，否则首帧后等待不可达位置而冻结
         liveSyncDurationCount: 1,
-        liveMaxSyncDurationCount: 2,
         lowLatencyMode: false,
         backBufferLength: 30,
         maxBufferLength: 20,
