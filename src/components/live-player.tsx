@@ -41,6 +41,16 @@ function proxyUrl(url: string): string {
   return STREAM_PROXY_BASE + encodeURIComponent(url);
 }
 
+/**
+ * 原生 HLS 能力：iOS/iPadOS Safari 不支持 MSE，hls.js 无法工作，
+ * 但系统自带 HLS 播放（canPlayType 返回 maybe/probably），此时直接把 m3u8 交给 <video>。
+ */
+function supportsNativeHls(): boolean {
+  if (typeof document === 'undefined') return false;
+  const video = document.createElement('video');
+  return !!video.canPlayType('application/vnd.apple.mpegurl');
+}
+
 interface LivePlayerProps {
   /** 上游直播流地址（直连优先，失败自动走代理） */
   url: string;
@@ -234,7 +244,7 @@ export function LivePlayer({ url, title, onPrevChannel, onNextChannel }: LivePla
       }
       if (disposed || destroyed) return;
       if (!Mpegts.getFeatureList().mseLivePlayback) {
-        setError('当前浏览器不支持 FLV 直播播放');
+        setError('当前设备（如 iPhone）不支持 FLV 直播，请选择 HLS（m3u8）频道');
         return;
       }
       const player = Mpegts.createPlayer(
@@ -324,7 +334,17 @@ export function LivePlayer({ url, title, onPrevChannel, onNextChannel }: LivePla
       moreVideoAttr: { playsInline: true },
       customType: {
         m3u8: (video: HTMLVideoElement) => {
-          setupHls(video, url, 'direct');
+          // iOS/原生 HLS 设备绕过 hls.js，直接交给系统播放器（失败仍走代理重试）
+          if (supportsNativeHls()) {
+            setupNative(
+              video,
+              url,
+              true,
+              '该 HLS 频道无法在当前浏览器播放，请尝试其他频道'
+            );
+          } else {
+            setupHls(video, url, 'direct');
+          }
         },
         flv: (video: HTMLVideoElement) => {
           void setupFlv(video, url, true);
