@@ -18,6 +18,7 @@ import { useToast } from '@/components/toast';
 import { EmptyState } from '@/components/states';
 import { Icon } from '@/components/icon';
 import { PixelIcon } from '@/components/pixel-dock';
+import { TactileButton } from '@/components/tactile-button';
 
 /**
  * 首页：搜索（URL ?s= 驱动，可后退/分享）+ 豆瓣推荐。
@@ -252,19 +253,19 @@ function HomeContent() {
                     <Icon name="close" className="w-4 h-4" />
                   </button>
                 )}
-                {/* 主操作按钮：贴合搜索框右端——右侧圆角跟随容器、左侧直角，展开时右下角
-                    跟着容器一起改直角；按压改用亮度反馈（缩放会让贴合边缘露出缝隙） */}
-                <button
+                {/* 主操作按钮：贴合搜索框右端的立体按压按钮，右侧圆角跟随容器、左侧直角 */}
+                <TactileButton
                   type="submit"
+                  variant="flush"
                   aria-label="搜索"
                   className={cn(
-                    'btn-primary glass-accent shrink-0 px-4 font-medium transition-[background-color,filter] active:brightness-90',
+                    'shrink-0 self-stretch px-4',
                     '!rounded-l-none',
                     searchHistory.visible ? '!rounded-tr-xl !rounded-br-none' : '!rounded-r-xl'
                   )}
                 >
                   <PixelIcon name="search" />
-                </button>
+                </TactileButton>
               </div>
             </form>
 

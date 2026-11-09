@@ -4,6 +4,7 @@ import type * as React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/lib/store';
 import { SmartImage } from './smart-image';
+import { TactileButton } from './tactile-button';
 
 /**
  * 苹果 Cover Flow（iPod 风格）海报墙：
@@ -200,14 +201,14 @@ export function CoverFlow<T>({
           {metaOf?.(center) && (
             <p className="text-xs text-muted mt-1 line-clamp-1">{metaOf(center)}</p>
           )}
-          <button
-            type="button"
+          <TactileButton
+            variant="pill"
             onClick={() => onOpen(center)}
-            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black px-5 py-2 text-sm font-medium hover:opacity-90 transition"
+            className="mt-3"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
             {actionLabel}
-          </button>
+          </TactileButton>
           <p className="mt-3 text-[11px] text-faint">
             {active + 1} / {length} · 拖动、滚轮或点击两侧海报切换
           </p>
