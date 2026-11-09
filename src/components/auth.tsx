@@ -7,6 +7,7 @@ import { applyEnvPresets } from '@/lib/subscription-sync';
 import type { AuthStatusResponse } from '@/lib/types';
 import { useToast } from './toast';
 import { OtpVerification } from './otp';
+import { BlueFlutedGlass } from './blue-fluted-glass';
 
 /**
  * 认证上下文：
@@ -161,14 +162,14 @@ function LoginModal({
     setTimeout(onSuccess, 900);
   }, [onSuccess]);
 
-  return (
-    <div
-      className="fixed inset-0 z-[95] flex items-center justify-center bg-black/80 animate-fade-in"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      {setupRequired ? (
+  if (setupRequired) {
+    return (
+      <div
+        className="fixed inset-0 z-[95] flex items-center justify-center bg-black/80 animate-fade-in"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
         <div
           className="bg-surface-raised rounded-2xl p-6 w-full max-w-lg mx-4 shadow-2xl"
           role="dialog"
@@ -181,20 +182,32 @@ function LoginModal({
             请联系管理员在部署配置中添加该变量后重启服务。
           </p>
         </div>
-      ) : (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="访问验证"
-          className="w-full max-w-[420px] mx-4"
-          style={{ ['--otp-bg' as string]: 'transparent' } as React.CSSProperties}
-        >
+      </div>
+    );
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="访问验证"
+      className="fixed inset-0 z-[95] overflow-hidden animate-fade-in"
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onClose();
+      }}
+    >
+      <BlueFlutedGlass className="absolute inset-0 h-full w-full" />
+      <div
+        className="absolute inset-0 flex items-center justify-center"
+        style={{ ['--otp-bg' as string]: 'transparent' } as React.CSSProperties}
+      >
+        <div className="w-full max-w-[420px] px-4">
           <OtpVerification
             options={{ onVerify: handleVerify, onSuccess: handleSuccess }}
             className="w-full"
           />
         </div>
-      )}
+      </div>
     </div>
   );
 }
