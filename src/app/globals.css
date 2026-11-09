@@ -631,8 +631,9 @@ html:not(.dark) {
 /* 贴合搜索框：无外投影/暗边，圆角由容器控制，按下用亮度+内缩，不缩放避免露缝 */
 .tactile--flush { border-radius: 0; background: transparent; }
 .tactile--flush .tactile-outer,
-.tactile--flush .tactile-inner { border-radius: inherit; }
-.tactile--flush .tactile-inner { padding: 0; }
+.tactile--flush .tactile-inner { border-radius: inherit; box-sizing: border-box; }
+.tactile--flush .tactile-outer { height: 100%; }
+.tactile--flush .tactile-inner { height: 100%; padding: 0 16px; }
 .tactile--flush:active .tactile-inner { filter: brightness(0.92); }
 .tactile--flush:focus-visible,
 .tactile--pill:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.85); outline-offset: 2px; }

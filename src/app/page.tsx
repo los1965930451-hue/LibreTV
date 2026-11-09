@@ -259,7 +259,7 @@ function HomeContent() {
                   variant="flush"
                   aria-label="搜索"
                   className={cn(
-                    'shrink-0 self-stretch px-4',
+                    'shrink-0 self-stretch',
                     '!rounded-l-none',
                     searchHistory.visible ? '!rounded-tr-xl !rounded-br-none' : '!rounded-r-xl'
                   )}
