@@ -3,11 +3,10 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { ThemeToggle } from './theme';
 import { SourceManagerDrawer } from './source-manager';
 import { HistoryPanel } from './history-panel';
 import { requestShowDownloadManager } from './download-manager';
-import { Icon } from './icon';
+import { PixelDockButton, PixelDockLink, PixelThemeToggle } from './pixel-dock';
 import { SearchHistoryDropdown, useSearchHistory } from './search-history';
 import { cn } from '@/lib/utils';
 
@@ -98,70 +97,24 @@ export function Header({ showSearch = false }: { showSearch?: boolean }) {
         </div>
       </header>
 
-      {/* 右侧竖直停靠栏：直播 / 关于 / 主题 / 历史 / 下载 / 设置 */}
+      {/* 右侧竖直停靠栏（像素风）：直播 / 关于 / 主题 / 历史 / 下载 / 设置 */}
       <nav
         aria-label="快捷功能"
-        className="fixed right-2 sm:right-3 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-0.5 rounded-2xl border border-line bg-surface/80 backdrop-blur-xl p-1.5 shadow-lg"
+        className="fixed right-2 sm:right-3 top-1/2 -translate-y-1/2 z-40 flex flex-col items-center gap-1 rounded-2xl border border-line bg-surface/80 backdrop-blur-xl p-1.5 shadow-lg"
       >
-        <DockLink href="/live" label="直播" active={pathname === '/live'}>
-          {/* 直播：信号塔 + 电波 */}
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5.5 19.5h13M12 15.5l-4.5 4M12 15.5l4.5 4M12 15.5V9M12 9a3.5 3.5 0 013.5 3.5M12 9a3.5 3.5 0 00-3.5 3.5M8.2 6.7a5.5 5.5 0 017.6 0M5.9 4.4a8.7 8.7 0 0112.2 0" />
-          </svg>
-        </DockLink>
-        <DockLink href="/about" label="关于" active={pathname === '/about'}>
-          {/* 关于：i 信息 */}
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="9" strokeWidth={1.8} />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 11v5M12 7.6h.01" />
-          </svg>
-        </DockLink>
+        <PixelDockLink href="/live" label="直播" icon="live" active={pathname === '/live'} />
+        <PixelDockLink href="/about" label="关于" icon="about" active={pathname === '/about'} />
 
         <div className="w-5 h-px bg-line my-1" aria-hidden="true" />
 
-        <ThemeToggle />
-        <DockButton label="观看历史" onClick={() => setHistoryOpen(true)}>
-          <Icon name="clock" />
-        </DockButton>
-        <DockButton label="下载管理" onClick={requestShowDownloadManager}>
-          <Icon name="download" />
-        </DockButton>
-        <DockButton label="设置" onClick={() => setSettingsOpen(true)}>
-          <Icon name="gear" />
-        </DockButton>
+        <PixelThemeToggle />
+        <PixelDockButton label="观看历史" icon="clock" onClick={() => setHistoryOpen(true)} />
+        <PixelDockButton label="下载管理" icon="download" onClick={requestShowDownloadManager} />
+        <PixelDockButton label="设置" icon="gear" onClick={() => setSettingsOpen(true)} />
       </nav>
 
       <SourceManagerDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <HistoryPanel open={historyOpen} onClose={() => setHistoryOpen(false)} />
     </>
-  );
-}
-
-function DockLink({ href, active, label, children }: { href: string; active: boolean; label: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      title={label}
-      aria-label={label}
-      className={cn(
-        'p-2 rounded-xl transition-colors',
-        active ? 'text-content bg-hover' : 'text-muted hover:text-content hover:bg-hover'
-      )}
-    >
-      {children}
-    </Link>
-  );
-}
-
-function DockButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      className="p-2 rounded-xl text-muted hover:text-content hover:bg-hover transition-colors"
-      title={label}
-      aria-label={label}
-      onClick={onClick}
-    >
-      {children}
-    </button>
   );
 }
