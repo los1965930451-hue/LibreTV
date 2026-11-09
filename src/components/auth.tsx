@@ -201,7 +201,7 @@ function LoginModal({
         className="absolute inset-0 flex items-center justify-center"
         style={{ ['--otp-bg' as string]: 'transparent' } as React.CSSProperties}
       >
-        <div className="w-full max-w-[420px] px-4">
+        <div className="w-full max-w-[460px] px-4">
           <OtpVerification
             options={{ onVerify: handleVerify, onSuccess: handleSuccess }}
             className="w-full"
