@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useTheme, type ThemeChoice } from './theme';
 import { cn } from '@/lib/utils';
 
@@ -76,6 +77,15 @@ const PIXELS: Record<string, Grid> = {
     '0111110',
     '0011100',
   ],
+  search: [
+    '0111000',
+    '1100100',
+    '1000100',
+    '0111000',
+    '0001000',
+    '0000100',
+    '0000010',
+  ],
 };
 
 export function PixelIcon({ name, className }: { name: keyof typeof PIXELS | string; className?: string }) {
@@ -128,6 +138,58 @@ export function PixelDockButton({
     <button type="button" title={label} aria-label={label} onClick={onClick} className={cn('px-btn', active && 'px-active')}>
       <PixelIcon name={icon} />
     </button>
+  );
+}
+
+/**
+ * 像素分段滑块：一条轨道把所有选项连起来，激活块以滑动方式在选项间移动。
+ * 窄屏可横向滚动，滑块按真实按钮位置/宽度定位。
+ */
+export function PixelSegmented({
+  options,
+  value,
+  onChange,
+  ariaLabel,
+}: {
+  options: { id: string; label: string }[];
+  value: string;
+  onChange: (id: string) => void;
+  ariaLabel?: string;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const btnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const [ind, setInd] = useState({ left: 0, width: 0, ready: false });
+
+  const measure = () => {
+    const el = btnRefs.current[value];
+    if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth, ready: true });
+  };
+
+  useLayoutEffect(measure, [value, options]);
+
+  return (
+    <div ref={trackRef} className="px-seg" role="group" aria-label={ariaLabel}>
+      <span
+        className="px-seg-ind"
+        style={{ left: ind.left, width: ind.width, opacity: ind.ready ? 1 : 0 }}
+        aria-hidden="true"
+      />
+      {options.map((o) => (
+        <button
+          key={o.id}
+          ref={(el) => {
+            btnRefs.current[o.id] = el;
+          }}
+          type="button"
+          role="tab"
+          aria-selected={value === o.id}
+          className={cn('px-seg-btn', value === o.id && 'px-seg-on')}
+          onClick={() => onChange(o.id)}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
   );
 }
 

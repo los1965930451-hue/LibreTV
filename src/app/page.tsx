@@ -17,6 +17,7 @@ import { cn, formatDisableTtl, validateSourceUrl } from '@/lib/utils';
 import { useToast } from '@/components/toast';
 import { EmptyState } from '@/components/states';
 import { Icon } from '@/components/icon';
+import { PixelIcon } from '@/components/pixel-dock';
 
 /**
  * 首页：搜索（URL ?s= 驱动，可后退/分享）+ 豆瓣推荐。
@@ -202,18 +203,18 @@ function HomeContent() {
                   下拉展开时改为「上圆下直」并隐去底边，与下方浮层拼成同一个面板 */}
               <div
                 className={cn(
-                  // 12px 圆角矩形（非胶囊）：收起态与展开态共用同一组上圆角，
-                  // 展开时输入框这部分形状完全不发生变化，上下圆角也与下拉保持一致；
-                  // 右侧与上下不留内边距，由搜索按钮拉伸填满、与搜索框边缘贴合
-                  'flex items-stretch min-h-12 pl-4 border',
-                  'transition-[background-color,border-color,border-radius] duration-200',
+                  // 像素搜索栏：聚焦时改用日夜双色像素光，形状仍为 12px 圆角矩形
+                  'px-search flex items-stretch min-h-12 pl-4 border',
+                  'transition-[background-color,border-color,border-radius,box-shadow] duration-200',
                   searchHistory.visible
-                    ? // 展开时：外框（含上圆角）沿用输入框的聚焦样式不变，只把底边改为内部分隔线，
-                      // 使输入区在展开状态下仍是边界清晰的独立输入框，而非与列表糊成一片
+                    ? // 展开时：外框沿用输入框样式，只把底边改为内部分隔线
                       'rounded-t-xl rounded-b-none border-accent border-b-line bg-surface-raised'
-                    : 'rounded-xl border-line bg-chip focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/40'
+                    : 'rounded-xl border-line bg-chip'
                 )}
               >
+                <span className="self-center pr-2" aria-hidden="true">
+                  <PixelIcon name="search" className="px-icon" />
+                </span>
                 <input
                   ref={inputRef}
                   className="flex-1 min-w-0 pr-2 bg-transparent text-sm text-content placeholder:text-faint focus:outline-none"
@@ -261,7 +262,7 @@ function HomeContent() {
                     searchHistory.visible ? '!rounded-tr-xl !rounded-br-none' : '!rounded-r-xl'
                   )}
                 >
-                  <Icon name="search" className="w-4 h-4" />
+                  <PixelIcon name="search" />
                   搜索
                 </button>
               </div>

@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/client-api';
 import { useAppStore } from '@/lib/store';
-import { cn } from '@/lib/utils';
 import type { DoubanItem } from '@/lib/types';
 import { CoverFlow } from './cover-flow';
 import { CoverFlowSkeleton } from './cover-flow-skeleton';
+import { PixelSegmented } from './pixel-dock';
 
 const MOVIE_TAGS = ['热门', '最新', '经典', '豆瓣高分', '冷门佳片', '华语', '欧美', '韩国', '日本', '动画'];
 const TV_TAGS = ['热门', '美剧', '英剧', '韩剧', '日剧', '国产剧', '港剧', '日本动画', '综艺', '纪录片'];
@@ -49,32 +49,25 @@ function DoubanView({ onPick }: { onPick: (title: string) => void }) {
 
   return (
     <section aria-label="影视推荐">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="flex bg-chip rounded-lg p-0.5">
-            <TypeButton active={type === 'movie'} onClick={() => switchType('movie')}>
-              电影
-            </TypeButton>
-            <TypeButton active={type === 'tv'} onClick={() => switchType('tv')}>
-              剧集
-            </TypeButton>
-          </div>
-        </div>
+      <div className="mb-3">
+        <PixelSegmented
+          ariaLabel="影视类型"
+          value={type}
+          onChange={(id) => switchType(id as 'movie' | 'tv')}
+          options={[
+            { id: 'movie', label: '电影' },
+            { id: 'tv', label: '剧集' },
+          ]}
+        />
       </div>
 
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        {tags.map((t) => (
-          <button
-            key={t}
-            className={cn(
-              'px-2.5 py-1 rounded-full text-xs transition-colors',
-              t === tag ? 'glass-accent bg-accent text-on-accent' : 'bg-chip text-muted hover:text-content hover:bg-hover'
-            )}
-            onClick={() => setTag(t)}
-          >
-            {t}
-          </button>
-        ))}
+      <div className="mb-4">
+        <PixelSegmented
+          ariaLabel="内容标签"
+          value={tag}
+          onChange={setTag}
+          options={tags.map((t) => ({ id: t, label: t }))}
+        />
       </div>
 
       {query.isError ? (
@@ -116,15 +109,16 @@ function BangumiView({ onPick }: { onPick: (title: string) => void }) {
 
   return (
     <section aria-label="新番放送推荐">
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        <ChipButton active={weekday === 'all'} onClick={() => setWeekday('all')}>
-          全部
-        </ChipButton>
-        {WEEKDAYS.map((name, i) => (
-          <ChipButton key={name} active={weekday === i + 1} onClick={() => setWeekday(i + 1)}>
-            {name}
-          </ChipButton>
-        ))}
+      <div className="mb-4">
+        <PixelSegmented
+          ariaLabel="星期筛选"
+          value={weekday === 'all' ? 'all' : String(weekday)}
+          onChange={(id) => setWeekday(id === 'all' ? 'all' : Number(id))}
+          options={[
+            { id: 'all', label: '全部' },
+            ...WEEKDAYS.map((name, i) => ({ id: String(i + 1), label: name })),
+          ]}
+        />
       </div>
 
       {query.isError ? (
@@ -168,12 +162,13 @@ function HotListView({ onPick }: { onPick: (title: string) => void }) {
 
   return (
     <section aria-label="影视榜单推荐">
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        {HOT_LISTS.map((l) => (
-          <ChipButton key={l.id} active={listId === l.id} onClick={() => setListId(l.id)}>
-            {l.label}
-          </ChipButton>
-        ))}
+      <div className="mb-4">
+        <PixelSegmented
+          ariaLabel="影视榜单"
+          value={listId}
+          onChange={setListId}
+          options={HOT_LISTS.map((l) => ({ id: l.id, label: l.label }))}
+        />
       </div>
 
       {query.isError ? (
@@ -192,31 +187,5 @@ function HotListView({ onPick }: { onPick: (title: string) => void }) {
         />
       )}
     </section>
-  );
-}
-
-function ChipButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      className={cn(
-        'px-2.5 py-1 rounded-full text-xs transition-colors',
-        active ? 'glass-accent bg-accent text-on-accent' : 'bg-chip text-muted hover:text-content hover:bg-hover'
-      )}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  );
-}
-
-function TypeButton({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      className={cn('px-3.5 py-1.5 rounded-md text-sm transition-colors', active ? 'glass-accent bg-accent text-on-accent' : 'text-muted hover:text-content')}
-      onClick={onClick}
-      aria-pressed={active}
-    >
-      {children}
-    </button>
   );
 }
