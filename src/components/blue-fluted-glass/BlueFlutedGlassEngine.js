@@ -1,7 +1,7 @@
 // Native DOM port of the preserved reference HTML. No iframe or runtime eval.
 import { createSurface } from "./motion-runtime";
 export function mountBlueFlutedGlass(target, options = {}) {
-const scope = createSurface(target, {"markup":"\r\n<!-- Design reference: sasha birukoff, https://x.com/sashabirukoff/status/2113002960892649916/video/1\r\n     Independent procedural reconstruction; original source and its license were not supplied.\r\n     The centered LeiBox artwork is the site's existing outlined wordmark. -->\r\n<main class=\"bfg-stage\" tabindex=\"0\" role=\"button\" aria-label=\"Pause background animation\" aria-pressed=\"false\" data-paused=\"false\">\r\n<canvas class=\"bfg-canvas\" aria-hidden=\"true\"></canvas>\r\n\r\n<span class=\"bfg-sr\" aria-live=\"polite\"></span>\r\n</main>\r\n\r\n","css":"\r\n*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;background:#f4f4f4}\r\n.bfg-stage{position:relative;display:grid;place-items:center;width:100%;height:100vh;min-height:1px;overflow:hidden;isolation:isolate;background:#f4f4f4;outline:none;cursor:default}\r\n.bfg-stage:focus-visible{outline:3px solid #fff;outline-offset:-7px;box-shadow:inset 0 0 0 9px #0b3c69}\r\n.bfg-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;filter:blur(1.25px);transform:scale(1.008)}\r\n.bfg-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}\r\n","width":1200,"height":833,"responsive":false}, options);
+const scope = createSurface(target, {"markup":"\r\n<!-- Design reference: sasha birukoff, https://x.com/sashabirukoff/status/2113002960892649916/video/1\r\n     Independent procedural reconstruction; original source and its license were not supplied.\r\n     The centered LeiBox artwork is the site's existing outlined wordmark. -->\r\n<main class=\"bfg-stage\" tabindex=\"0\" role=\"button\" aria-label=\"Pause background animation\" aria-pressed=\"false\" data-paused=\"false\">\r\n<canvas class=\"bfg-canvas\" aria-hidden=\"true\"></canvas>\r\n\r\n<span class=\"bfg-sr\" aria-live=\"polite\"></span>\r\n</main>\r\n\r\n","css":"\r\n*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;background:#020820}\r\n.bfg-stage{position:relative;display:grid;place-items:center;width:100%;height:100vh;min-height:1px;overflow:hidden;isolation:isolate;background:#020820;outline:none;cursor:default}\r\n.bfg-stage:focus-visible{outline:3px solid #fff;outline-offset:-7px;box-shadow:inset 0 0 0 9px #0b3c69}\r\n.bfg-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;filter:blur(1.25px);transform:scale(1.008)}\r\n.bfg-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}\r\n","width":1200,"height":833,"responsive":true}, options);
 const { document, window, requestAnimationFrame, cancelAnimationFrame, setTimeout, clearTimeout, setInterval, clearInterval, ResizeObserver, IntersectionObserver, matchMedia } = scope;
 
 const stage = document.querySelector('.bfg-stage');
@@ -78,9 +78,9 @@ if (!initialize()) {
   const fallback=canvas.cloneNode();canvas.replaceWith(fallback);
   // Keep a working static composition when WebGL is unavailable.
   const ctx=fallback.getContext('2d');fallback.width=960;fallback.height=666;
-  ctx.fillStyle='#f4f4f4';ctx.fillRect(0,0,960,666);
+  ctx.fillStyle='#020820';ctx.fillRect(0,0,960,666);
   const gradient=ctx.createRadialGradient(525,520,20,525,520,440);
-  gradient.addColorStop(0,'#020820');gradient.addColorStop(.45,'#073d69');gradient.addColorStop(.7,'#378fbe');gradient.addColorStop(1,'#f4f4f4');
+  gradient.addColorStop(0,'#020820');gradient.addColorStop(.45,'#073d69');gradient.addColorStop(.7,'#378fbe');gradient.addColorStop(1,'#020820');
   ctx.fillStyle=gradient;ctx.fillRect(0,0,960,666);
   stage.dataset.renderer='fallback';
 } else stage.dataset.renderer='webgl';

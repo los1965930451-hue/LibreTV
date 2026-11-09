@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { mountBlueFlutedGlass } from './BlueFlutedGlassEngine.js';
 import type { MotionController } from './motion-runtime';
 import type { BlueFlutedGlassOptions } from './BlueFlutedGlassEngine';
@@ -8,6 +8,15 @@ import type { BlueFlutedGlassOptions } from './BlueFlutedGlassEngine';
 export function BlueFlutedGlass({ options, className }: { options?: BlueFlutedGlassOptions; className?: string }) {
   const host = useRef<HTMLDivElement>(null);
   const controller = useRef<MotionController | null>(null);
+  const [vh, setVh] = useState<number>(() =>
+    typeof window === 'undefined' ? 833 : window.innerHeight
+  );
+
+  useEffect(() => {
+    const onResize = () => setVh(window.innerHeight);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     const instance = mountBlueFlutedGlass(host.current!, options);
@@ -20,8 +29,8 @@ export function BlueFlutedGlass({ options, className }: { options?: BlueFlutedGl
   }, []);
 
   useEffect(() => {
-    controller.current?.update(options ?? {});
-  }, [options]);
+    controller.current?.update({ ...(options ?? {}), height: vh });
+  }, [options, vh]);
 
   return <div ref={host} className={className} data-motion-component="blue-fluted-glass" />;
 }
