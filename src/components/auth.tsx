@@ -46,7 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [verified, setVerified] = useState(false);
   const [setupRequired, setSetupRequired] = useState(false);
   const [version, setVersion] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -76,12 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const setup = (event as CustomEvent).detail === 'setup';
         setSetupRequired(setup);
         setVerified(false);
-        setModalOpen(true);
       }),
     []
   );
 
-  const openLogin = useCallback(() => setModalOpen(true), []);
+  const openLogin = useCallback(() => setVerified(false), []);
 
   const logout = useCallback(async () => {
     try {
@@ -95,7 +93,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleLoginSuccess = useCallback(async () => {
     setVerified(true);
     setSetupRequired(false);
-    setModalOpen(false);
     // 登录前以 401 失败的查询（如豆瓣推荐）需要重新拉取
     queryClient.invalidateQueries();
     toast('验证成功', 'success');
@@ -118,12 +115,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ checked, verified, setupRequired, version, openLogin, logout }}>
-      {children}
-      {modalOpen && (
+      {verified ? (
+        children
+      ) : !checked ? (
+        // 鉴权状态确认前：只显示纯色全屏门，不渲染主页，避免主页骨架闪现
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 z-[95]"
+          style={{ background: '#020820' }}
+        />
+      ) : (
         <LoginModal
           setupRequired={setupRequired}
           onSuccess={handleLoginSuccess}
-          onClose={() => setModalOpen(false)}
+          onClose={() => {
+            /* 认证门不可关闭 */
+          }}
         />
       )}
     </AuthContext.Provider>
