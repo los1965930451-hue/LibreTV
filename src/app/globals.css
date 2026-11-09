@@ -311,7 +311,7 @@ html:not(.dark) .glass-accent:active {
   --px-glow: 111, 134, 255;          /* 夜间：月光蓝 */
 }
 html:not(.dark) {
-  --px-glow: 232, 150, 46;           /* 白天：日光橙 */
+  --px-glow: 138, 90, 224;           /* 白天：露露紫 */
 }
 
 /*

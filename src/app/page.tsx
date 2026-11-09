@@ -256,6 +256,7 @@ function HomeContent() {
                     跟着容器一起改直角；按压改用亮度反馈（缩放会让贴合边缘露出缝隙） */}
                 <button
                   type="submit"
+                  aria-label="搜索"
                   className={cn(
                     'btn-primary glass-accent shrink-0 px-4 font-medium transition-[background-color,filter] active:brightness-90',
                     '!rounded-l-none',
@@ -263,7 +264,6 @@ function HomeContent() {
                   )}
                 >
                   <PixelIcon name="search" />
-                  搜索
                 </button>
               </div>
             </form>
