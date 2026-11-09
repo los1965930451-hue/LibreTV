@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){try{var t=localStorage.getItem('tkytv-theme');var d=t!=='light';document.documentElement.classList.toggle('dark',d);}catch(e){}})()",
+              "(function(){try{var t=localStorage.getItem('tkytv-theme');var d=t==='dark';document.documentElement.classList.toggle('dark',d);}catch(e){}})()",
           }}
         />
       </head>
