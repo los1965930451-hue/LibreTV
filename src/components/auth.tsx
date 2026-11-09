@@ -6,7 +6,7 @@ import { api, onUnauthorized, STATUS_QUERY_KEY } from '@/lib/client-api';
 import { applyEnvPresets } from '@/lib/subscription-sync';
 import type { AuthStatusResponse } from '@/lib/types';
 import { useToast } from './toast';
-import { cn } from '@/lib/utils';
+import { OtpVerification } from './otp';
 
 /**
  * 认证上下文：
@@ -138,24 +138,6 @@ function LoginModal({
   onSuccess: () => void;
   onClose: () => void;
 }) {
-  const CELLS = 6;
-  const [chars, setChars] = useState<string[]>(Array(CELLS).fill(''));
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [pill, setPill] = useState<'idle' | 'error' | 'success'>('idle');
-  const refs = useRef<Array<HTMLInputElement | null>>([]);
-
-  useEffect(() => {
-    refs.current[0]?.focus();
-  }, []);
-
-  // 错误摇动结束后复位，便于再次输入
-  useEffect(() => {
-    if (pill !== 'error') return;
-    const t = setTimeout(() => setPill('idle'), 520);
-    return () => clearTimeout(t);
-  }, [pill]);
-
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -164,61 +146,20 @@ function LoginModal({
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  const submit = async (next: string[]) => {
-    const code = next.join('');
-    if (code.length !== CELLS || loading) return;
-    setLoading(true);
-    setError('');
-    setPill('idle');
+  // 真实登录：成功返回 true，失败返回 false（引擎据此显示绿色/红色反馈）
+  const handleVerify = useCallback(async (code: string) => {
     try {
       await api.login(code);
-      setPill('success');
-      setTimeout(onSuccess, 320);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : '验证失败';
-      setError(msg === '需要登录' ? '密码错误' : msg);
-      setPill('error');
-      setChars(Array(CELLS).fill(''));
-      setLoading(false);
-      refs.current[0]?.focus();
+      return true;
+    } catch {
+      return false;
     }
-  };
+  }, []);
 
-  const handleChange = (i: number, raw: string) => {
-    // 允许字母（含大小写）与数字，取本格最后一个有效字符
-    const v = raw.replace(/[^a-zA-Z0-9]/g, '');
-    if (!v) return;
-    const ch = v.slice(-1);
-    const next = [...chars];
-    next[i] = ch;
-    setChars(next);
-    if (i < CELLS - 1) refs.current[i + 1]?.focus();
-    else refs.current[i]?.blur();
-    if (next.every((c) => c !== '')) submit(next);
-  };
-
-  const handleKeyDown = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !chars[i] && i > 0) {
-      const next = [...chars];
-      next[i - 1] = '';
-      setChars(next);
-      refs.current[i - 1]?.focus();
-    }
-  };
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const text = e.clipboardData.getData('text').replace(/[^a-zA-Z0-9]/g, '').slice(0, CELLS);
-    if (!text) return;
-    const next = Array(CELLS).fill('');
-    text.split('').forEach((c, i) => {
-      next[i] = c;
-    });
-    setChars(next);
-    const focusAt = Math.min(text.length, CELLS - 1);
-    refs.current[focusAt]?.focus();
-    if (text.length === CELLS) submit(next);
-  };
+  // 绿色成功反馈播放后再关闭弹窗
+  const handleSuccess = useCallback(() => {
+    setTimeout(onSuccess, 900);
+  }, [onSuccess]);
 
   return (
     <div
@@ -228,7 +169,7 @@ function LoginModal({
       }}
     >
       <div
-        className="bg-surface-raised rounded-xl p-6 w-full max-w-sm mx-4 shadow-2xl"
+        className="bg-surface-raised rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-label={setupRequired ? '需要配置密码' : '访问验证'}
@@ -242,51 +183,10 @@ function LoginModal({
             </p>
           </>
         ) : (
-          <>
-            <h2 className="text-lg font-semibold text-content mb-1">懂的都懂</h2>
-            <p className="text-sm text-muted mb-4">输入六位密钥</p>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                submit(chars);
-              }}
-            >
-              <div
-                className={cn(
-                  'otp-cells',
-                  pill === 'error' && 'otp-error',
-                  pill === 'success' && 'otp-success',
-                  loading && 'otp-loading'
-                )}
-              >
-                {chars.map((c, i) => (
-                  <input
-                    key={i}
-                    ref={(el) => {
-                      refs.current[i] = el;
-                    }}
-                    type="text"
-                    inputMode="text"
-                    autoComplete={i === 0 ? 'one-time-code' : 'off'}
-                    maxLength={1}
-                    value={c}
-                    onChange={(e) => handleChange(i, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(i, e)}
-                    onPaste={handlePaste}
-                    className="otp-cell"
-                    aria-label={`第 ${i + 1} 位`}
-                    disabled={loading || pill === 'success'}
-                  />
-                ))}
-              </div>
-              {error && <p className="mt-3 text-sm text-danger text-center">{error}</p>}
-              {loading && (
-                <div className="mt-4 flex justify-center">
-                  <span className="otp-spin" aria-hidden="true" />
-                </div>
-              )}
-            </form>
-          </>
+          <OtpVerification
+            options={{ onVerify: handleVerify, onSuccess: handleSuccess }}
+            className="w-full"
+          />
         )}
       </div>
     </div>
