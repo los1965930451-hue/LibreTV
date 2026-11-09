@@ -304,11 +304,21 @@ html:not(.dark) .glass-accent:active {
 }
 
 /*
+ * 像素日夜发光色（全局，供 dock 按钮、分段滑块、搜索栏共用）
+ * 默认夜间冷蓝月光，浅色态暖橙日光
+ */
+:root {
+  --px-glow: 111, 134, 255;          /* 夜间：月光蓝 */
+}
+html:not(.dark) {
+  --px-glow: 232, 150, 46;           /* 白天：日光橙 */
+}
+
+/*
  * 像素停靠栏按钮（参考 pixel-toggle 日夜逻辑，非照搬）
- * 夜间冷蓝月光、白天暖橙日光；像素图标 + 按压回弹 + 悬停光带
+ * 像素图标 + 按压回弹 + 悬停光带
  */
 .px-btn {
-  --px-glow: 111, 134, 255;          /* 夜间：月光蓝 */
   position: relative;
   display: grid;
   place-items: center;
@@ -318,9 +328,6 @@ html:not(.dark) .glass-accent:active {
   transition: color 180ms ease, background-color 180ms ease,
     box-shadow 220ms ease, transform 120ms cubic-bezier(0.34, 1.56, 0.64, 1);
   isolation: isolate;
-}
-html:not(.dark) .px-btn {
-  --px-glow: 232, 150, 46;           /* 白天：日光橙 */
 }
 .px-btn:hover {
   color: rgb(var(--c-content));
