@@ -3,9 +3,9 @@
  * 宽度单位 px；时长单位秒（*Duration）或毫秒（*Delay/*Duration 中以 ms 使用的项）。
  */
 export const OTP_MOTION = {
-  compactWidth: 132,
-  expandedWidth: 340,
-  verifiedWidth: 190,
+  compactWidth: 202,
+  expandedWidth: 373,
+  verifiedWidth: 176,
   openDuration: 0.42,
   collapseDuration: 0.34,
   focusDuration: 0.28,
