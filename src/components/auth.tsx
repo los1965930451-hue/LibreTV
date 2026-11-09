@@ -6,6 +6,7 @@ import { api, onUnauthorized, STATUS_QUERY_KEY } from '@/lib/client-api';
 import { applyEnvPresets } from '@/lib/subscription-sync';
 import type { AuthStatusResponse } from '@/lib/types';
 import { useToast } from './toast';
+import { cn } from '@/lib/utils';
 
 /**
  * 认证上下文：
@@ -140,11 +141,19 @@ function LoginModal({
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pill, setPill] = useState<'idle' | 'error' | 'success'>('idle');
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // 错误摇动结束后复位胶囊，便于再次输入
+  useEffect(() => {
+    if (pill !== 'error') return;
+    const t = setTimeout(() => setPill('idle'), 520);
+    return () => clearTimeout(t);
+  }, [pill]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -158,15 +167,18 @@ function LoginModal({
     if (!password.trim() || loading) return;
     setLoading(true);
     setError('');
+    setPill('idle');
     try {
       await api.login(password);
-      onSuccess();
+      // 先给绿色成功反馈，再关闭弹窗（参考 OTP 成功态）
+      setPill('success');
+      setTimeout(onSuccess, 320);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '验证失败';
       setError(msg === '需要登录' ? '密码错误' : msg);
+      setPill('error');
       setPassword('');
       inputRef.current?.focus();
-    } finally {
       setLoading(false);
     }
   };
@@ -202,19 +214,45 @@ function LoginModal({
                 submit();
               }}
             >
-              <input
-                ref={inputRef}
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input w-full"
-                placeholder="你知道的"
-                autoComplete="current-password"
-              />
-              {error && <p className="mt-2 text-sm text-danger">{error}</p>}
-              <button type="submit" className="btn-primary w-full mt-4" disabled={loading || !password.trim()}>
-                {loading ? '验证中...' : '进入'}
-              </button>
+              <div className={cn('otp-pill', pill === 'error' && 'otp-error', pill === 'success' && 'otp-success')}>
+                <input
+                  ref={inputRef}
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="otp-input"
+                  placeholder="你知道的"
+                  autoComplete="current-password"
+                  aria-invalid={pill === 'error'}
+                />
+                <button
+                  type="submit"
+                  aria-label="进入"
+                  disabled={loading || !password.trim()}
+                  className={cn(
+                    'otp-go',
+                    pill === 'error' && 'otp-go-err',
+                    pill === 'success' && 'otp-go-ok'
+                  )}
+                >
+                  {loading ? (
+                    <span className="otp-spin" aria-hidden="true" />
+                  ) : pill === 'success' ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  ) : pill === 'error' ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                      <path d="M18 6 6 18M6 6l12 12" />
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+              {error && <p className="mt-2 text-sm text-danger text-center">{error}</p>}
             </form>
           </>
         )}
