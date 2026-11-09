@@ -464,6 +464,46 @@ html:not(.dark) {
 }
 .otp-input::placeholder { color: rgb(var(--c-faint)); }
 .otp-input:focus { outline: none; }
+
+/* 六格 OTP 输入 */
+.otp-cells {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.otp-cell {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-width: 48px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  border-radius: 14px;
+  border: 1px solid rgb(var(--c-line));
+  background: rgb(var(--c-chip));
+  color: rgb(var(--c-content));
+  caret-color: rgb(var(--c-accent));
+  transition: border-color 200ms ease, box-shadow 220ms ease,
+    background-color 220ms ease, transform 160ms ease;
+}
+.otp-cell:focus {
+  outline: none;
+  border-color: rgba(var(--px-glow), 0.85);
+  box-shadow: 0 0 0 1px rgba(var(--px-glow), 0.5),
+    0 8px 20px -10px rgba(var(--px-glow), 0.7);
+  transform: translateY(-2px);
+}
+.otp-cells.otp-error .otp-cell {
+  border-color: rgba(235, 87, 87, 0.9);
+  box-shadow: 0 0 0 1px rgba(235, 87, 87, 0.5);
+  animation: otp-shake 480ms cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+.otp-cells.otp-success .otp-cell {
+  border-color: rgba(52, 199, 89, 0.9);
+  box-shadow: 0 0 0 1px rgba(52, 199, 89, 0.5);
+  background: rgba(52, 199, 89, 0.12);
+}
+.otp-cells.otp-loading .otp-cell { opacity: 0.6; }
 .otp-go {
   display: grid;
   place-items: center;
