@@ -168,27 +168,33 @@ function LoginModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div
-        className="bg-surface-raised rounded-2xl p-6 w-full max-w-lg mx-4 shadow-2xl"
-        role="dialog"
-        aria-modal="true"
-        aria-label={setupRequired ? '需要配置密码' : '访问验证'}
-      >
-        {setupRequired ? (
-          <>
-            <h2 className="text-lg font-semibold text-content mb-3">需要配置密码</h2>
-            <p className="text-sm text-muted leading-relaxed">
-              为确保安全，必须设置 <code className="text-accent">PASSWORD</code> 环境变量才能使用本服务。
-              请联系管理员在部署配置中添加该变量后重启服务。
-            </p>
-          </>
-        ) : (
+      {setupRequired ? (
+        <div
+          className="bg-surface-raised rounded-2xl p-6 w-full max-w-lg mx-4 shadow-2xl"
+          role="dialog"
+          aria-modal="true"
+          aria-label="需要配置密码"
+        >
+          <h2 className="text-lg font-semibold text-content mb-3">需要配置密码</h2>
+          <p className="text-sm text-muted leading-relaxed">
+            为确保安全，必须设置 <code className="text-accent">PASSWORD</code> 环境变量才能使用本服务。
+            请联系管理员在部署配置中添加该变量后重启服务。
+          </p>
+        </div>
+      ) : (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="访问验证"
+          className="w-full max-w-[420px] mx-4"
+          style={{ ['--otp-bg' as string]: 'transparent' } as React.CSSProperties}
+        >
           <OtpVerification
             options={{ onVerify: handleVerify, onSuccess: handleSuccess }}
             className="w-full"
           />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
