@@ -26,6 +26,9 @@ export interface CoverFlowProps<T> {
 
 const MAX_DEPTH = 4; // 每侧最多展示的海报数
 
+/** 初始居中位置：尽量让左右各有 4 张（第 5 张），不足时取最后一张 */
+const startIndex = (length: number) => (length > MAX_DEPTH ? MAX_DEPTH : Math.max(0, length - 1));
+
 export function CoverFlow<T>({
   items,
   keyOf,
@@ -44,9 +47,11 @@ export function CoverFlow<T>({
 
   const length = items.length;
   const firstKey = length > 0 ? keyOf(items[0]) : '';
-  // 新一次搜索 / 列表切换时回到第一张并清空失败记录
+  // 循环取模：越界时绕回，保证两侧始终能凑满 4 张
+  const mod = useCallback((i: number) => (length === 0 ? 0 : ((i % length) + length) % length), [length]);
+  // 新一次搜索 / 列表切换时回到居中起始位并清空失败记录
   useEffect(() => {
-    setActive(0);
+    setActive(startIndex(length));
     setFailed({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstKey]);
@@ -62,18 +67,17 @@ export function CoverFlow<T>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, firstKey]);
 
-  const clamp = useCallback((i: number) => Math.max(0, Math.min(length - 1, i)), [length]);
-  const go = useCallback((i: number) => setActive((v) => clamp(i)), [clamp]);
+  const go = useCallback((i: number) => setActive(() => mod(i)), [mod]);
 
-  // 键盘左右切换
+  // 键盘左右切换（循环）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); setActive((v) => clamp(v - 1)); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); setActive((v) => clamp(v + 1)); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); setActive((v) => mod(v - 1)); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); setActive((v) => mod(v + 1)); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [clamp]);
+  }, [mod]);
 
   const onWheel = (e: React.WheelEvent) => {
     const now = Date.now();
@@ -81,7 +85,7 @@ export function CoverFlow<T>({
     const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
     if (Math.abs(d) < 8) return;
     wheelLock.current = now + 280;
-    setActive((v) => clamp(v + (d > 0 ? 1 : -1)));
+    setActive((v) => mod(v + (d > 0 ? 1 : -1)));
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
@@ -93,11 +97,11 @@ export function CoverFlow<T>({
   const onPointerUp = (e: React.PointerEvent) => {
     if (!drag.current) return;
     const dx = e.clientX - drag.current.x;
-    if (Math.abs(dx) > 50) setActive(clamp(drag.current.active + (dx < 0 ? 1 : -1)));
+    if (Math.abs(dx) > 50) setActive(mod(drag.current.active + (dx < 0 ? 1 : -1)));
     drag.current = null;
   };
 
-  const center = items[clamp(active)];
+  const center = items[mod(active)];
 
   return (
     <div className="w-full select-none">
@@ -108,34 +112,34 @@ export function CoverFlow<T>({
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
       >
-        {/* 左切换 */}
+        {/* 左切换（循环，不置灰） */}
         <button
           type="button"
           aria-label="上一部"
-          disabled={active === 0}
           onClick={() => go(active - 1)}
-          className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 z-[200] w-9 h-9 rounded-full bg-black/45 dark:bg-white/15 text-white backdrop-blur-md flex items-center justify-center disabled:opacity-25 hover:bg-black/65 transition"
+          className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 z-[200] w-9 h-9 rounded-full bg-black/45 dark:bg-white/15 text-white backdrop-blur-md flex items-center justify-center hover:bg-black/65 transition"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
         </button>
         <button
           type="button"
           aria-label="下一部"
-          disabled={active >= length - 1}
           onClick={() => go(active + 1)}
-          className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 z-[200] w-9 h-9 rounded-full bg-black/45 dark:bg-white/15 text-white backdrop-blur-md flex items-center justify-center disabled:opacity-25 hover:bg-black/65 transition"
+          className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 z-[200] w-9 h-9 rounded-full bg-black/45 dark:bg-white/15 text-white backdrop-blur-md flex items-center justify-center hover:bg-black/65 transition"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </button>
 
-        {items.map((item, i) => {
-          const offset = i - active;
+        {/* 9 个槽位：中央 + 左右各 4，索引经取模循环，首尾相接也能凑满 */}
+        {Array.from({ length: MAX_DEPTH * 2 + 1 }, (_, k) => {
+          const offset = k - MAX_DEPTH; // -4..4
           const abs = Math.abs(offset);
-          if (abs > MAX_DEPTH) return null;
-          const isCenter = i === active;
+          const i = mod(active + offset);
+          const item = items[i];
+          const isCenter = abs === 0;
           let transform: string;
           let opacity = 1;
-          if (abs === 0) {
+          if (isCenter) {
             transform = 'translateX(-50%) translateX(0px) scale(1) rotateY(0deg)';
           } else {
             const sign = offset > 0 ? 1 : -1;
@@ -149,7 +153,7 @@ export function CoverFlow<T>({
           const imgFailed = failed[firstKey + i];
           return (
             <button
-              key={keyOf(item)}
+              key={`${itemKey}__${offset}`}
               type="button"
               onClick={() => (isCenter ? onOpen(item) : go(i))}
               aria-label={titleOf(item)}
