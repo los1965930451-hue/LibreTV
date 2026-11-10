@@ -103,6 +103,19 @@ export function CoverFlow<T>({
 
   const center = items[mod(active)];
 
+  // 9 个槽位：中央 + 左右各 4，索引经取模循环
+  const slots = Array.from({ length: MAX_DEPTH * 2 + 1 }, (_, k) => {
+    const offset = k - MAX_DEPTH; // -4..4
+    const index = mod(active + offset);
+    return { offset, abs: Math.abs(offset), index, item: items[index] };
+  });
+  // 列表很短时同一海报会占多个槽位：记录这些重复 key（仅它们需要带后缀）
+  const keyCount: Record<string, number> = {};
+  slots.forEach((s) => {
+    const kk = keyOf(s.item);
+    keyCount[kk] = (keyCount[kk] || 0) + 1;
+  });
+
   return (
     <div className="w-full select-none">
       <div
@@ -130,12 +143,8 @@ export function CoverFlow<T>({
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </button>
 
-        {/* 9 个槽位：中央 + 左右各 4，索引经取模循环，首尾相接也能凑满 */}
-        {Array.from({ length: MAX_DEPTH * 2 + 1 }, (_, k) => {
-          const offset = k - MAX_DEPTH; // -4..4
-          const abs = Math.abs(offset);
-          const i = mod(active + offset);
-          const item = items[i];
+        {/* 9 个槽位：中央 + 左右各 4，索引经取模循环；key 稳定以保留 transform 过渡动画 */}
+        {slots.map(({ offset, abs, index: i, item }) => {
           const isCenter = abs === 0;
           let transform: string;
           let opacity = 1;
@@ -151,9 +160,11 @@ export function CoverFlow<T>({
           const pic = picOf?.(item);
           const itemKey = keyOf(item);
           const imgFailed = failed[firstKey + i];
+          // 正常列表用稳定 key（节点复用→transform 平滑滚动）；仅短列表重复项才带后缀
+          const nodeKey = keyCount[itemKey] > 1 ? `${itemKey}__${offset}` : itemKey;
           return (
             <button
-              key={`${itemKey}__${offset}`}
+              key={nodeKey}
               type="button"
               onClick={() => (isCenter ? onOpen(item) : go(i))}
               aria-label={titleOf(item)}
