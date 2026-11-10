@@ -173,7 +173,7 @@ function HomeContent() {
       {/* 首页整页网格背景：仅白天挂载，底色即 tkyTV 浅色页 #f6f7f9；黑夜模式完全不变 */}
       {resolved === 'light' && (
         <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
-          <GridPulse />
+          <GridPulse ambient={6} />
         </div>
       )}
       <Header />

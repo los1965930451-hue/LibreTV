@@ -331,8 +331,8 @@ export function GridPulse({
       className={cn(
         "pointer-events-none absolute inset-0 overflow-hidden",
         // The hairlines, faint on their own so the lit cells keep full ink.
-        // tkyTV 配色：用 --c-content 作为线条基色，浅色下为深灰、保证 #f6f7f9 上的对比。
-        "[--grid-pulse-line:color-mix(in_oklab,rgb(var(--c-content))_7%,transparent)]",
+        // tkyTV 配色：用 --c-content 作为线条基色，14% 让网格在 #f6f7f9 上清晰可见。
+        "[--grid-pulse-line:color-mix(in_oklab,rgb(var(--c-content))_14%,transparent)]",
         // Fades out at the bottom, so whatever follows can climb over it.
         "[mask-image:linear-gradient(to_bottom,#000_92%,transparent)]",
         className,
