@@ -19,6 +19,7 @@ import { EmptyState } from '@/components/states';
 import { Icon } from '@/components/icon';
 import { PixelIcon } from '@/components/pixel-dock';
 import { GridPulse } from '@/components/ui/grid-pulse';
+import { HandwrittenLogo } from '@/components/ui/handwritten-logo';
 import { useTheme } from '@/components/theme';
 
 /**
@@ -194,8 +195,9 @@ function HomeContent() {
         {/* 搜索区 */}
         <section className={cn('flex flex-col items-center', urlQuery ? 'mb-6' : 'mt-8 mb-8')}>
           {!urlQuery && (
-            <header className="text-center -mt-6 mb-12">
-              <h1 className="text-4xl sm:text-5xl font-extrabold leading-[1.25] pb-1 brand-gradient">tkyTV</h1>
+            <header className="text-center -mt-6 mb-12 flex flex-col items-center">
+              <h1 className="sr-only">tkyTV</h1>
+              <HandwrittenLogo />
             </header>
           )}
           {urlQuery && <h1 className="sr-only">tkyTV 视频搜索</h1>}
