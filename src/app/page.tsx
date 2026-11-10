@@ -18,6 +18,8 @@ import { useToast } from '@/components/toast';
 import { EmptyState } from '@/components/states';
 import { Icon } from '@/components/icon';
 import { PixelIcon } from '@/components/pixel-dock';
+import { GridPulse } from '@/components/ui/grid-pulse';
+import { useTheme } from '@/components/theme';
 
 /**
  * 首页：搜索（URL ?s= 驱动，可后退/分享）+ 豆瓣推荐。
@@ -38,6 +40,7 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { resolved } = useTheme();
   const urlQuery = searchParams.get('s') || '';
   // 精确订阅所需字段（对齐 live 页的做法）：搜索流式期间逐源写健康度、
   // 打开设置抽屉/历史面板等无关 store 变化，都不应触发首页整树重渲染
@@ -167,6 +170,12 @@ function HomeContent() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* 首页整页网格背景：仅白天挂载，底色即 tkyTV 浅色页 #f6f7f9；黑夜模式完全不变 */}
+      {resolved === 'light' && (
+        <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
+          <GridPulse />
+        </div>
+      )}
       <Header />
 
       <main className="relative flex-1 max-w-6xl w-full mx-auto pl-4 pr-16 sm:pr-20 py-6">
