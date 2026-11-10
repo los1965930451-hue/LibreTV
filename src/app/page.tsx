@@ -172,13 +172,13 @@ function HomeContent() {
     <div className="min-h-screen flex flex-col">
       {/* 首页整页网格背景：仅白天挂载，底色即 tkyTV 浅色页 #f6f7f9；黑夜模式完全不变 */}
       {resolved === 'light' && (
-        <div aria-hidden className="pointer-events-none fixed inset-0 -z-10">
+        <div aria-hidden className="pointer-events-none fixed inset-0 z-0">
           <GridPulse ambient={6} />
         </div>
       )}
       <Header />
 
-      <main className="relative flex-1 max-w-6xl w-full mx-auto pl-4 pr-16 sm:pr-20 py-6">
+      <main className="relative z-10 flex-1 max-w-6xl w-full mx-auto pl-4 pr-16 sm:pr-20 py-6">
         {/* 首屏氛围渐变 */}
         {!urlQuery && (
           <div
