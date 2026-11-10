@@ -39,6 +39,7 @@ export function CoverFlow<T>({
   actionLabel = '观看',
 }: CoverFlowProps<T>) {
   const [active, setActive] = useState(0);
+  const [drift, setDrift] = useState(0); // 单海报传送带的连续位移
   const [failed, setFailed] = useState<Record<string, boolean>>({});
   const imageProxyMode = useAppStore((s) => s.imageProxyMode);
   const customImageProxy = useAppStore((s) => s.customImageProxy);
@@ -52,6 +53,7 @@ export function CoverFlow<T>({
   // 新一次搜索 / 列表切换时回到居中起始位并清空失败记录
   useEffect(() => {
     setActive(startIndex(length));
+    setDrift(0);
     setFailed({});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstKey]);
@@ -68,16 +70,24 @@ export function CoverFlow<T>({
   }, [active, firstKey]);
 
   const go = useCallback((i: number) => setActive(() => mod(i)), [mod]);
+  // 方向切换：更新 active；同时累加 drift（单海报传送带靠它产生连续滚动）
+  const move = useCallback(
+    (dir: number) => {
+      setActive((v) => mod(v + dir));
+      setDrift((d) => d + dir);
+    },
+    [mod]
+  );
 
   // 键盘左右切换（循环）
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') { e.preventDefault(); setActive((v) => mod(v - 1)); }
-      if (e.key === 'ArrowRight') { e.preventDefault(); setActive((v) => mod(v + 1)); }
+      if (e.key === 'ArrowLeft') { e.preventDefault(); move(-1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); move(1); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [mod]);
+  }, [move]);
 
   const onWheel = (e: React.WheelEvent) => {
     const now = Date.now();
@@ -85,7 +95,7 @@ export function CoverFlow<T>({
     const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
     if (Math.abs(d) < 8) return;
     wheelLock.current = now + 280;
-    setActive((v) => mod(v + (d > 0 ? 1 : -1)));
+    move(d > 0 ? 1 : -1);
   };
 
   const onPointerDown = (e: React.PointerEvent) => {
@@ -97,7 +107,7 @@ export function CoverFlow<T>({
   const onPointerUp = (e: React.PointerEvent) => {
     if (!drag.current) return;
     const dx = e.clientX - drag.current.x;
-    if (Math.abs(dx) > 50) setActive(mod(drag.current.active + (dx < 0 ? 1 : -1)));
+    if (Math.abs(dx) > 50) move(dx < 0 ? 1 : -1);
     drag.current = null;
   };
 
@@ -116,6 +126,17 @@ export function CoverFlow<T>({
     keyCount[kk] = (keyCount[kk] || 0) + 1;
   });
 
+  // 单海报传送带：M 个克隆围成一圈，位置随 drift 平移，屏外克隆（|offset|>4）透明以隐藏绕回
+  const isSingle = length === 1;
+  const BELT_M = MAX_DEPTH * 2 + 3; // 11 个克隆，中心位置 5 → 几何偏移 -5..5
+  const belt = isSingle
+    ? Array.from({ length: BELT_M }, (_, b) => {
+        const pos = ((b + drift) % BELT_M + BELT_M) % BELT_M;
+        const offset = pos - (BELT_M - 1) / 2; // -5..5
+        return { b, offset, abs: Math.abs(offset) };
+      })
+    : [];
+
   return (
     <div className="w-full select-none">
       <div
@@ -129,7 +150,7 @@ export function CoverFlow<T>({
         <button
           type="button"
           aria-label="上一部"
-          onClick={() => go(active - 1)}
+          onClick={() => move(-1)}
           className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 z-[200] w-9 h-9 rounded-full bg-black/45 dark:bg-white/15 text-white backdrop-blur-md flex items-center justify-center hover:bg-black/65 transition"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
@@ -137,14 +158,82 @@ export function CoverFlow<T>({
         <button
           type="button"
           aria-label="下一部"
-          onClick={() => go(active + 1)}
+          onClick={() => move(1)}
           className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 z-[200] w-9 h-9 rounded-full bg-black/45 dark:bg-white/15 text-white backdrop-blur-md flex items-center justify-center hover:bg-black/65 transition"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </button>
 
         {/* 9 个槽位：中央 + 左右各 4，索引经取模循环；key 稳定以保留 transform 过渡动画 */}
-        {slots.map(({ offset, abs, index: i, item }) => {
+        {/* 单海报传送带：克隆随 drift 平滑平移，屏外克隆透明以隐藏绕回 */}
+        {isSingle &&
+          belt.map(({ b, offset, abs }) => {
+            const item = items[0];
+            const isCenter = abs === 0;
+            let transform: string;
+            let opacity = 0;
+            if (isCenter) {
+              transform = 'translateX(-50%) translateX(0px) scale(1) rotateY(0deg)';
+              opacity = 1;
+            } else if (abs <= MAX_DEPTH) {
+              const sign = offset > 0 ? 1 : -1;
+              const baseW = 200;
+              const x = sign * (baseW * 0.62 + (abs - 1) * baseW * 0.42);
+              transform = `translateX(-50%) translateX(${x}px) scale(0.78) rotateY(${sign * -55}deg)`;
+              opacity = abs >= MAX_DEPTH ? 0.25 : 0.75 - (abs - 1) * 0.15;
+            } else {
+              transform = 'translateX(-50%) translateX(0px) scale(0.78)';
+            }
+            const pic = picOf?.(item);
+            const itemKey = keyOf(item);
+            const imgFailed = failed[firstKey + 0];
+            return (
+              <button
+                key={`belt-${b}`}
+                type="button"
+                onClick={() => (isCenter ? onOpen(item) : move(offset > 0 ? 1 : -1))}
+                aria-label={titleOf(item)}
+                className="absolute left-1/2 top-4 sm:top-6 outline-none focus-visible:ring-2 focus-visible:ring-white/70 rounded-xl"
+                style={{
+                  width: 'clamp(150px, 34vw, 210px)',
+                  aspectRatio: '2 / 3',
+                  transform,
+                  transformStyle: 'preserve-3d',
+                  transition: 'transform 0.55s cubic-bezier(0.22,0.75,0.22,1), opacity 0.4s ease',
+                  zIndex: 100 - abs,
+                  opacity,
+                  cursor: 'pointer',
+                  ...(isCenter
+                    ? { WebkitBoxReflect: 'below 6px linear-gradient(transparent 62%, rgba(0,0,0,0.35))' }
+                    : {}),
+                } as React.CSSProperties}
+              >
+                <span
+                  className="block w-full h-full overflow-hidden rounded-xl bg-chip ring-1 ring-black/10 dark:ring-white/15"
+                  style={{ boxShadow: isCenter ? '0 24px 60px rgba(0,0,0,0.45)' : '0 10px 30px rgba(0,0,0,0.35)' }}
+                >
+                  {pic && !imgFailed ? (
+                    <SmartImage
+                      key={isCenter ? `center-${itemKey}` : `belt-${b}`}
+                      url={pic}
+                      mode={imageProxyMode}
+                      customProxy={customImageProxy}
+                      alt={titleOf(item)}
+                      loading={isCenter ? 'eager' : 'lazy'}
+                      className="h-full w-full object-cover pointer-events-none"
+                      onExhausted={() => setFailed((f) => ({ ...f, [firstKey + 0]: true }))}
+                    />
+                  ) : (
+                    <span className="h-full w-full flex items-center justify-center text-faint">
+                      <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 4v16m10-16v16M4 6h2v12H4zm4 0h2v12H8zm8 0h2v12h-2zm4 0h2v12h-2z" /></svg>
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+
+        {!isSingle && slots.map(({ offset, abs, index: i, item }) => {
           const isCenter = abs === 0;
           let transform: string;
           let opacity = 1;
