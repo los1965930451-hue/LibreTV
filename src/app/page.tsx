@@ -221,12 +221,9 @@ function HomeContent() {
                     : 'rounded-xl border-line bg-chip'
                 )}
               >
-                <span className="self-center pr-2" aria-hidden="true">
-                  <PixelIcon name="search" className="px-icon" />
-                </span>
                 <input
                   ref={inputRef}
-                  className="flex-1 min-w-0 pr-2 bg-transparent text-sm text-content placeholder:text-faint focus:outline-none"
+                  className="flex-1 min-w-0 pl-2 pr-2 bg-transparent text-sm text-content placeholder:text-faint focus:outline-none"
                   value={input}
                   maxLength={100}
                   onChange={(e) => {
