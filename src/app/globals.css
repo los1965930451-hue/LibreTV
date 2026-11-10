@@ -633,7 +633,13 @@ html:not(.dark) {
 .tactile--flush .tactile-outer,
 .tactile--flush .tactile-inner { border-radius: inherit; box-sizing: border-box; }
 .tactile--flush .tactile-outer { height: 100%; }
-.tactile--flush .tactile-inner { height: 100%; padding: 0 16px; }
+.tactile--flush .tactile-inner {
+  height: 100%;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .tactile--flush:active .tactile-inner { filter: brightness(0.92); }
 .tactile--flush:focus-visible,
 .tactile--pill:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.85); outline-offset: 2px; }
