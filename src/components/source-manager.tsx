@@ -60,7 +60,8 @@ const NAV_GROUPS: { title: string; items: { id: SettingsPanelId; label: string; 
 const ALL_PANELS = NAV_GROUPS.flatMap((g) => g.items.map((i) => i.id));
 const TAB_STORAGE_KEY = 'tkytv-settings-tab';
 
-export function SourceManagerDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+/** 设置主体内容（竖直导航 + 面板），可在抽屉或动能菜单二级页中复用 */
+export function SettingsContent() {
   const [active, setActive] = useState<SettingsPanelId>('vod');
 
   // 挂载后读取上次位置（兼容旧版两级横排结构；已下线的 image/home 回落到 playback）
@@ -99,8 +100,7 @@ export function SourceManagerDrawer({ open, onClose }: { open: boolean; onClose:
   };
 
   return (
-    <Drawer open={open} onClose={onClose} title="设置" resetScrollKey={active}>
-      <div className="flex gap-3">
+    <div className="flex gap-3">
         {/* 竖直导航栏 */}
         <nav
           aria-label="设置导航"
@@ -155,7 +155,15 @@ export function SourceManagerDrawer({ open, onClose }: { open: boolean; onClose:
           {active === 'subs' && <SourceSubscriptions />}
           {active === 'io' && <ConfigIoPanel />}
         </div>
-      </div>
+    </div>
+  );
+}
+
+/** 抽屉版设置（保留复用入口） */
+export function SourceManagerDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Drawer open={open} onClose={onClose} title="设置">
+      <SettingsContent />
     </Drawer>
   );
 }
