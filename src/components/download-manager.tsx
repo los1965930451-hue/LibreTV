@@ -386,24 +386,27 @@ export function GlobalDownloadManager() {
     gsap.set(panelRef.current, { xPercent: 100 });
   }, []);
 
-  // 动能滑入/滑出
+  // 动能滑入/滑出（持久 timeline，避免 context revert 导致关闭瞬间还原/卡住）
+  const dlTlRef = useRef<gsap.core.Timeline | null>(null);
   useEffect(() => {
     const wrap = wrapRef.current;
-    if (!wrap || !panelRef.current) return;
-    const ctx = gsap.context(() => {
-      if (open) {
-        gsap.set(wrap, { display: 'block' });
-        gsap.to(panelRef.current, { xPercent: 0, duration: 0.5, ease: 'power3.out' });
-      } else {
-        gsap.to(panelRef.current, {
+    const panel = panelRef.current;
+    if (!wrap || !panel) return;
+    dlTlRef.current?.kill();
+    const tl = gsap.timeline();
+    dlTlRef.current = tl;
+    if (open) {
+      tl.set(wrap, { display: 'block' })
+        .fromTo(panel, { xPercent: 100 }, { xPercent: 0, duration: 0.5, ease: 'power3.out' });
+    } else {
+      tl.set(wrap, { display: 'block' })
+        .fromTo(panel, { xPercent: 0 }, {
           xPercent: 100,
           duration: 0.4,
           ease: 'power3.in',
           onComplete: () => { gsap.set(wrap, { display: 'none' }); },
         });
-      }
-    });
-    return () => ctx.revert();
+    }
   }, [open]);
 
   return (
@@ -416,16 +419,16 @@ export function GlobalDownloadManager() {
         aria-label="下载管理"
         className="absolute right-0 top-0 h-full w-full sm:max-w-md bg-page border-l border-line flex flex-col outline-none"
       >
-        <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-line">
+        <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-line">
+          <span className="text-base font-semibold text-content">下载管理</span>
           <button
             type="button"
             onClick={() => setOpen(false)}
-            aria-label="返回"
+            aria-label="关闭"
             className="grid place-items-center h-8 w-8 rounded-full border border-line bg-surface text-muted hover:text-accent transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
-          <span className="text-base font-semibold text-content">下载管理</span>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
           <DownloadManagerContent />
