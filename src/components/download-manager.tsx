@@ -28,7 +28,7 @@ const MAX_CONCURRENT_DOWNLOADS = 3;
 /** 进度落库节流间隔：整集动辄上千分片，逐片「写库 + 全量查询 + setState」会把长任务页面拖垮 */
 const PROGRESS_PERSIST_INTERVAL_MS = 1000;
 const ADD_TASK_EVENT = 'tkytv:add-download';
-const SHOW_MANAGER_EVENT = 'tkytv:show-download-manager';
+export const SHOW_MANAGER_EVENT = 'tkytv:show-download-manager';
 export const DOWNLOADS_UPDATED_EVENT = 'tkytv:downloads-updated';
 
 export interface AddDownloadPayload {
@@ -366,14 +366,25 @@ export function requestShowDownloadManager(): void {
   window.dispatchEvent(new CustomEvent(SHOW_MANAGER_EVENT));
 }
 
+/** 关闭下载管理器（动能加号按钮调用） */
+export const HIDE_MANAGER_EVENT = 'tkytv:hide-download-manager';
+export function requestHideDownloadManager(): void {
+  window.dispatchEvent(new CustomEvent(HIDE_MANAGER_EVENT));
+}
+
 /** 全局挂载点：根布局渲染一次，常驻调度逻辑 + 动能风格全屏覆盖层 */
 export function GlobalDownloadManager() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const onShow = () => setOpen(true);
+    const onHide = () => setOpen(false);
     window.addEventListener(SHOW_MANAGER_EVENT, onShow);
-    return () => window.removeEventListener(SHOW_MANAGER_EVENT, onShow);
+    window.addEventListener(HIDE_MANAGER_EVENT, onHide);
+    return () => {
+      window.removeEventListener(SHOW_MANAGER_EVENT, onShow);
+      window.removeEventListener(HIDE_MANAGER_EVENT, onHide);
+    };
   }, []);
 
   return (

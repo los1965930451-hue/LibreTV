@@ -5,7 +5,7 @@ import gsap from 'gsap';
 import { useRouter, usePathname } from 'next/navigation';
 import { SETTINGS_PANELS, SettingsPanelById, type SettingsPanelId } from './source-manager';
 import { HistoryContent } from './history-panel';
-import { requestShowDownloadManager } from './download-manager';
+import { requestShowDownloadManager, requestHideDownloadManager, SHOW_MANAGER_EVENT, HIDE_MANAGER_EVENT } from './download-manager';
 import { useTheme } from './theme';
 import { cn } from '@/lib/utils';
 
@@ -33,8 +33,21 @@ export function KineticDock() {
   const [open, setOpen] = React.useState(false);
   const [level, setLevel] = React.useState<'root' | 'settings' | 'history'>('root');
   const [settingsPanel, setSettingsPanel] = React.useState<SettingsPanelId | null>(null);
+  const [dlOpen, setDlOpen] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
+
+  // 跟踪下载管理器开合，使中间加号在其打开时充当关闭按钮
+  React.useEffect(() => {
+    const onShow = () => setDlOpen(true);
+    const onHide = () => setDlOpen(false);
+    window.addEventListener(SHOW_MANAGER_EVENT, onShow);
+    window.addEventListener(HIDE_MANAGER_EVENT, onHide);
+    return () => {
+      window.removeEventListener(SHOW_MANAGER_EVENT, onShow);
+      window.removeEventListener(HIDE_MANAGER_EVENT, onHide);
+    };
+  }, []);
 
   const close = React.useCallback(() => setOpen(false), []);
 
@@ -212,10 +225,13 @@ export function KineticDock() {
       <button
         ref={triggerRef}
         type="button"
-        aria-label={open ? '关闭菜单' : '打开菜单'}
+        aria-label={dlOpen ? '关闭下载管理' : open ? '关闭菜单' : '打开菜单'}
         aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 grid place-items-center h-12 w-12 rounded-full border border-line bg-surface/80 backdrop-blur-xl shadow-lg text-accent hover:shadow-xl transition-shadow"
+        onClick={() => {
+          if (dlOpen) { requestHideDownloadManager(); setDlOpen(false); return; }
+          setOpen((v) => !v);
+        }}
+        className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-[60] grid place-items-center h-12 w-12 rounded-full border border-line bg-surface/80 backdrop-blur-xl shadow-lg text-accent hover:shadow-xl transition-shadow"
       >
         <svg viewBox="0 0 16 16" fill="none" className="menu-button-icon w-5 h-5">
           <path d="M7.333 16V0h1.334v16H7.333Z" fill="currentColor" />
