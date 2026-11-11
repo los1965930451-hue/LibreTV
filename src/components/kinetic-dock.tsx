@@ -73,6 +73,7 @@ export function KineticDock() {
   // 打开/关闭主动画（持久 timeline，避免 context revert 在切换瞬间把动画还原）
   const tlRef = React.useRef<gsap.core.Timeline | null>(null);
   React.useEffect(() => {
+    (globalThis as any).__dbgEffect = { open, hasRoot: !!wrapRef.current };
     const root = wrapRef.current;
     if (!root) return;
     const menu = root.querySelector('.menu-content');
