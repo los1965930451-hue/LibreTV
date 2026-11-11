@@ -100,7 +100,7 @@ export function KineticDock() {
           .to(overlay, { autoAlpha: 0, duration: 0.35 }, 0)
           .to(icon, { rotate: 0, duration: 0.4, ease: 'power2.in' }, 0)
           .to(links, { yPercent: 140, duration: 0.3, stagger: 0.03, ease: 'power2.in' }, 0)
-          .to(menu, { xPercent: 100, duration: 0.45, ease: 'power3.in' }, 0)
+          .fromTo(menu, { xPercent: 0 }, { xPercent: 100, duration: 0.45, ease: 'power3.in' }, 0)
           .set(root, { display: 'none' });
       }
     });
