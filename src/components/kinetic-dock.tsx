@@ -81,8 +81,15 @@ export function KineticDock() {
       const panels = root.querySelectorAll('.backdrop-layer');
       const links = root.querySelectorAll('.nav-link');
       const icon = triggerRef.current?.querySelector('.menu-button-icon');
+      const hoverBgs = root.querySelectorAll('.nav-link-hover-bg');
+      const sheens = root.querySelectorAll('.nav-link-sheen');
+      const hoverTexts = root.querySelectorAll('.nav-link-text');
       if (!menu || !overlay || !icon) return;
       const tl = gsap.timeline();
+      // 每次开合都重置悬停背景/高光/文字，避免残留色块
+      tl.set(hoverBgs, { xPercent: -100 }, 0)
+        .set(sheens, { xPercent: -160 }, 0)
+        .set(hoverTexts, { x: 0 }, 0);
       if (open) {
         tl.set(root, { display: 'block' })
           .to(icon, { rotate: 315, duration: 0.5, ease: 'power2.out' }, 0)
@@ -250,7 +257,7 @@ export function KineticDock() {
                 </svg>
               </div>
 
-              <div className="menu-content-wrapper relative h-full flex items-center px-8 sm:px-12">
+              <div className="menu-content-wrapper relative h-full flex items-center px-8 sm:px-12 select-none">
                 <ul className="menu-list w-full space-y-2">
                   {items.map((it) => (
                     <li key={it.key} data-shape={it.shape} className="menu-list-item">
@@ -283,7 +290,7 @@ export function KineticDock() {
             {/* 设置二级页：动能大条目列表 + 面板层滑入 */}
             <div className="settings-subpage absolute inset-0 bg-page flex flex-col">
               {/* 列表层 */}
-              <div className="settings-list-layer flex-1 flex flex-col min-h-0">
+              <div className="settings-list-layer flex-1 flex flex-col min-h-0 select-none">
                 <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-line">
                   <button
                     type="button"
