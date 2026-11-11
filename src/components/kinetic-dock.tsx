@@ -33,7 +33,6 @@ export function KineticDock() {
   const [open, setOpen] = React.useState(false);
   const [level, setLevel] = React.useState<'root' | 'settings' | 'history'>('root');
   const [settingsPanel, setSettingsPanel] = React.useState<SettingsPanelId | null>(null);
-  (globalThis as any).__dbgRender = { open, mounts: ((globalThis as any).__dbgRender?.mounts ?? 0) + 1 };
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
 
@@ -63,8 +62,10 @@ export function KineticDock() {
     const subpage = root.querySelector('.settings-subpage');
     const historySub = root.querySelector('.history-subpage');
     const panelLayer = root.querySelector('.settings-panel-layer');
+    const layers = root.querySelectorAll('.backdrop-layer');
     gsap.set(menu, { xPercent: 100 });
     gsap.set(overlay, { autoAlpha: 0 });
+    gsap.set(layers, { xPercent: 100 });
     gsap.set(links, { yPercent: 140 });
     gsap.set(subpage, { xPercent: 100 });
     gsap.set(historySub, { xPercent: 100 });
@@ -74,7 +75,6 @@ export function KineticDock() {
   // 打开/关闭主动画（持久 timeline，避免 context revert 在切换瞬间把动画还原）
   const tlRef = React.useRef<gsap.core.Timeline | null>(null);
   React.useEffect(() => {
-    (globalThis as any).__dbgEffect = { open, hasRoot: !!wrapRef.current };
     const root = wrapRef.current;
     if (!root) return;
     const menu = root.querySelector('.menu-content');
@@ -84,11 +84,11 @@ export function KineticDock() {
     const hoverBgs = root.querySelectorAll('.nav-link-hover-bg');
     const sheens = root.querySelectorAll('.nav-link-sheen');
     const hoverTexts = root.querySelectorAll('.nav-link-text');
+    const layers = root.querySelectorAll('.backdrop-layer');
     if (!menu || !overlay || !icon) return;
     tlRef.current?.kill();
     const tl = gsap.timeline();
     tlRef.current = tl;
-    (globalThis as any).__dbg = { open, tl, menu };
     // 每次开合都重置悬停背景/高光/文字，避免残留色块
     tl.set(hoverBgs, { xPercent: -100 }, 0)
       .set(sheens, { xPercent: -160 }, 0)
@@ -98,6 +98,7 @@ export function KineticDock() {
           .to(icon, { rotate: 315, duration: 0.5, ease: 'power2.out' }, 0)
           .to(overlay, { autoAlpha: 1, duration: 0.5 }, 0)
           .fromTo(menu, { xPercent: 100 }, { xPercent: 0, duration: 0.55, ease: 'power3.out' }, 0.1)
+          .fromTo(layers, { xPercent: 100 }, { xPercent: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out' }, 0.12)
           .to(links, { yPercent: 0, duration: 0.65, stagger: 0.06, ease: 'power3.out' }, 0.35);
       } else {
         // 先保持覆盖层可见（覆盖 Tailwind 的 hidden 类），滑出结束后再隐藏
@@ -105,6 +106,7 @@ export function KineticDock() {
           .to(overlay, { autoAlpha: 0, duration: 0.35 }, 0)
           .to(icon, { rotate: 0, duration: 0.4, ease: 'power2.in' }, 0)
           .to(links, { yPercent: 140, duration: 0.3, stagger: 0.03, ease: 'power2.in' }, 0)
+          .to(layers, { xPercent: 100, duration: 0.5, stagger: 0.06, ease: 'power3.in' }, 0)
           .fromTo(menu, { xPercent: 0 }, { xPercent: 100, duration: 0.45, ease: 'power3.in' }, 0)
           .set(root, { display: 'none' });
       }
@@ -227,9 +229,10 @@ export function KineticDock() {
           <div className="overlay absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={close} />
           <nav className="menu-content absolute right-0 top-0 h-full w-full sm:max-w-md bg-page">
             <div className="menu-bg relative h-full">
-              <div className="backdrop-layer first absolute inset-0 bg-page" />
-              <div className="backdrop-layer second absolute inset-0 bg-surface/95" />
-              <div className="backdrop-layer absolute inset-0 bg-chip/80" />
+              {/* 三层动能页面：从后（左）到前（右）蓝 → 灰 → 白，错峰露出 */}
+              <div className="backdrop-layer absolute top-0 h-full w-full rounded-r-2xl" style={{ left: -48, background: '#5b5bd6' }} />
+              <div className="backdrop-layer absolute top-0 h-full w-full rounded-r-2xl" style={{ left: -24, background: '#8a8a8a' }} />
+              <div className="backdrop-layer absolute top-0 h-full w-full rounded-r-2xl bg-page" />
 
               {/* 抽象图形（露露紫系） */}
               <div className="ambient-background-shapes absolute inset-0 overflow-hidden">
