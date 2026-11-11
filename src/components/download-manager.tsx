@@ -369,8 +369,6 @@ export function requestShowDownloadManager(): void {
 /** 全局挂载点：根布局渲染一次，常驻调度逻辑 + 动能风格全屏覆盖层 */
 export function GlobalDownloadManager() {
   const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onShow = () => setOpen(true);
@@ -378,46 +376,17 @@ export function GlobalDownloadManager() {
     return () => window.removeEventListener(SHOW_MANAGER_EVENT, onShow);
   }, []);
 
-  // 初始：覆盖层隐藏、面板停在右侧屏外
-  useEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap) return;
-    gsap.set(wrap, { display: 'none' });
-    gsap.set(panelRef.current, { xPercent: 100 });
-  }, []);
-
-  // 动能滑入/滑出（持久 timeline，避免 context revert 导致关闭瞬间还原/卡住）
-  const dlTlRef = useRef<gsap.core.Timeline | null>(null);
-  useEffect(() => {
-    const wrap = wrapRef.current;
-    const panel = panelRef.current;
-    if (!wrap || !panel) return;
-    dlTlRef.current?.kill();
-    const tl = gsap.timeline();
-    dlTlRef.current = tl;
-    if (open) {
-      tl.set(wrap, { display: 'block' })
-        .fromTo(panel, { xPercent: 100 }, { xPercent: 0, duration: 0.5, ease: 'power3.out' });
-    } else {
-      tl.set(wrap, { display: 'block' })
-        .fromTo(panel, { xPercent: 0 }, {
-          xPercent: 100,
-          duration: 0.4,
-          ease: 'power3.in',
-          onComplete: () => { gsap.set(wrap, { display: 'none' }); },
-        });
-    }
-  }, [open]);
-
   return (
-    <div ref={wrapRef} className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} aria-hidden />
+    <div className={`fixed inset-0 z-50 ${open ? '' : 'pointer-events-none'}`} aria-hidden={open ? undefined : true}>
       <div
-        ref={panelRef}
+        onClick={() => setOpen(false)}
+        className={`absolute inset-0 bg-black/50 transition-opacity duration-300 ${open ? 'opacity-100' : 'opacity-0'}`}
+      />
+      <div
         role="dialog"
         aria-modal="true"
         aria-label="下载管理"
-        className="absolute right-0 top-0 h-full w-full sm:max-w-md bg-page border-l border-line flex flex-col outline-none"
+        className={`absolute right-0 top-0 h-full w-full sm:max-w-md bg-page border-l border-line flex flex-col outline-none transition-transform duration-400 ease-out ${open ? 'translate-x-0' : 'translate-x-full'}`}
       >
         <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-line">
           <span className="text-base font-semibold text-content">下载管理</span>
