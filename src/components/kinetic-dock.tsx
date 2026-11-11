@@ -102,23 +102,40 @@ export function KineticDock() {
     if (!root) return;
     const ctx = gsap.context(() => {
       const host = root.querySelector('.ambient-background-shapes');
-      if (!host) return;
       root.querySelectorAll('.menu-list-item').forEach((li) => {
+        const bg = li.querySelector('.nav-link-hover-bg');
+        const sheen = li.querySelector('.nav-link-sheen');
+        const text = li.querySelector('.nav-link-text');
+        // 初始：背景停在左侧屏外，高光归位
+        gsap.set(bg, { xPercent: -100 });
+        gsap.set(sheen, { xPercent: -160 });
+
         const idx = li.getAttribute('data-shape');
         const shape = host?.querySelector(`.bg-shape-${idx}`);
-        if (!shape) return;
-        const els = shape.querySelectorAll('.shape-element');
+        const els = shape ? shape.querySelectorAll('.shape-element') : [];
+
         const enter = () => {
-          host.querySelectorAll('.bg-shape').forEach((s) => s.classList.remove('active'));
-          shape.classList.add('active');
-          gsap.fromTo(
-            els,
-            { scale: 0.5, opacity: 0, rotation: -10 },
-            { scale: 1, opacity: 1, rotation: 0, duration: 0.55, stagger: 0.07, ease: 'back.out(1.7)', overwrite: 'auto' }
-          );
+          // 背景从左滑入 + 高光扫过 + 文字右移
+          gsap.to(bg, { xPercent: 0, duration: 0.4, ease: 'power3.out', overwrite: 'auto' });
+          gsap.fromTo(sheen, { xPercent: -160 }, { xPercent: 320, duration: 0.7, ease: 'power2.out', overwrite: 'auto' });
+          gsap.to(text, { x: 6, duration: 0.3, ease: 'power2.out', overwrite: 'auto' });
+          if (shape) {
+            host?.querySelectorAll('.bg-shape').forEach((s) => s.classList.remove('active'));
+            shape.classList.add('active');
+            gsap.fromTo(
+              els,
+              { scale: 0.5, opacity: 0, rotation: -10 },
+              { scale: 1, opacity: 1, rotation: 0, duration: 0.55, stagger: 0.07, ease: 'back.out(1.7)', overwrite: 'auto' }
+            );
+          }
         };
         const leave = () => {
-          gsap.to(els, { scale: 0.8, opacity: 0, duration: 0.28, ease: 'power2.in', onComplete: () => shape.classList.remove('active'), overwrite: 'auto' });
+          gsap.to(bg, { xPercent: -100, duration: 0.3, ease: 'power3.in', overwrite: 'auto' });
+          gsap.set(sheen, { xPercent: -160, overwrite: 'auto' });
+          gsap.to(text, { x: 0, duration: 0.25, ease: 'power2.in', overwrite: 'auto' });
+          if (shape) {
+            gsap.to(els, { scale: 0.8, opacity: 0, duration: 0.28, ease: 'power2.in', onComplete: () => shape.classList.remove('active'), overwrite: 'auto' });
+          }
         };
         li.addEventListener('mouseenter', enter);
         li.addEventListener('mouseleave', leave);
@@ -208,8 +225,17 @@ export function KineticDock() {
                           it.active && 'text-accent'
                         )}
                       >
-                        <span className="nav-link-hover-bg absolute inset-0 bg-hover scale-y-0 origin-bottom transition-transform duration-300 group-hover:scale-y-100" aria-hidden />
-                        <span className="nav-link-text relative text-lg font-semibold text-content">{it.label}</span>
+                        <span
+                          className="nav-link-hover-bg absolute inset-0 rounded-xl"
+                          style={{ background: 'linear-gradient(90deg, rgba(138,90,224,0.20), rgba(138,90,224,0.05))' }}
+                          aria-hidden
+                        />
+                        <span
+                          className="nav-link-sheen absolute inset-y-0 w-1/3"
+                          style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)' }}
+                          aria-hidden
+                        />
+                        <span className="nav-link-text relative text-lg font-semibold text-content transition-colors group-hover:text-accent">{it.label}</span>
                       </button>
                     </li>
                   ))}
