@@ -2,12 +2,14 @@
 
 import { Header } from '@/components/header';
 import { SiteFooter } from '@/components/site-footer';
+import { GridBackground } from '@/components/ui/grid-background';
 
 export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col">
+      <GridBackground />
       <Header />
-      <main className="flex-1 max-w-2xl w-full mx-auto pl-4 pr-16 sm:pr-20 py-10 space-y-8">
+      <main className="relative z-10 flex-1 max-w-2xl w-full mx-auto pl-4 pr-16 sm:pr-20 py-10 space-y-8">
         <section>
           <h1 className="text-xl font-bold text-content mb-3">关于 tkyTV</h1>
           <p className="text-sm text-muted leading-relaxed">
