@@ -86,6 +86,7 @@ export function KineticDock() {
     tlRef.current?.kill();
     const tl = gsap.timeline();
     tlRef.current = tl;
+    (globalThis as any).__dbg = { open, tl, menu };
     // 每次开合都重置悬停背景/高光/文字，避免残留色块
     tl.set(hoverBgs, { xPercent: -100 }, 0)
       .set(sheens, { xPercent: -160 }, 0)
