@@ -29,20 +29,15 @@ import { resolveSource, useAppStore } from '@/lib/store';
 /** 未搜索时列表默认展示的条数（DB 实存 MAX_HISTORY 条，其余靠搜索查阅） */
 const VISIBLE_LIMIT = 50;
 
-export function HistoryPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+/** 观看历史主体内容（可在抽屉或动能二级页复用） */
+export function HistoryContent() {
   // 全量读取（上限即 DB 淘汰上限）：默认只渲染最近若干条，搜索时覆盖更早的记录
-  const history = useLiveQuery(
-    () => db.history.orderBy('timestamp').reverse().limit(MAX_HISTORY).toArray(),
-    [open]
+  const history = useLiveQuery(() =>
+    db.history.orderBy('timestamp').reverse().limit(MAX_HISTORY).toArray()
   );
   const { toast } = useToast();
   const [confirmClear, setConfirmClear] = useState(false);
   const [query, setQuery] = useState('');
-
-  // 关闭后重置搜索词：下次打开回到完整列表，不残留上次的过滤状态
-  useEffect(() => {
-    if (!open) setQuery('');
-  }, [open]);
 
   const keyword = query.trim().toLowerCase();
   const visible = useMemo(() => {
@@ -54,49 +49,43 @@ export function HistoryPanel({ open, onClose }: { open: boolean; onClose: () => 
   const total = history?.length ?? 0;
 
   return (
-    <Drawer
-      open={open}
-      onClose={onClose}
-      title="观看历史"
-      width="max-w-lg"
-      // 搜索框放在固定副标题栏：历史较长时滚动列表仍可随时改关键字
-      subheader={
-        total > 0 ? (
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Icon
-                name="search"
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-faint pointer-events-none"
-              />
-              <input
-                type="text"
-                className="w-full h-9 pl-8 pr-8 rounded-lg border border-line bg-chip text-sm text-content placeholder:text-faint focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
-                placeholder="搜索观看历史..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                aria-label="搜索观看历史"
-              />
-              {query && (
-                <button
-                  type="button"
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-faint hover:text-content hover:bg-hover transition-colors"
-                  onClick={() => setQuery('')}
-                  aria-label="清空搜索"
-                >
-                  <Icon name="close" className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-            <button
-              className="shrink-0 px-2 py-1.5 rounded-md text-xs text-faint hover:text-danger hover:bg-hover transition-colors"
-              onClick={() => setConfirmClear(true)}
-            >
-              清空历史
-            </button>
+    <>
+      {/* 搜索栏：历史较长时可随时改关键字 */}
+      {total > 0 && (
+        <div className="flex items-center gap-2 mb-3">
+          <div className="relative flex-1">
+            <Icon
+              name="search"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-faint pointer-events-none"
+            />
+            <input
+              type="text"
+              className="w-full h-9 pl-8 pr-8 rounded-lg border border-line bg-chip text-sm text-content placeholder:text-faint focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/40"
+              placeholder="搜索观看历史..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="搜索观看历史"
+            />
+            {query && (
+              <button
+                type="button"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-faint hover:text-content hover:bg-hover transition-colors"
+                onClick={() => setQuery('')}
+                aria-label="清空搜索"
+              >
+                <Icon name="close" className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
-        ) : undefined
-      }
-    >
+          <button
+            className="shrink-0 px-2 py-1.5 rounded-md text-xs text-faint hover:text-danger hover:bg-hover transition-colors"
+            onClick={() => setConfirmClear(true)}
+          >
+            清空历史
+          </button>
+        </div>
+      )}
+
       {!history ? (
         <LoadingState />
       ) : total === 0 ? (
@@ -131,6 +120,14 @@ export function HistoryPanel({ open, onClose }: { open: boolean; onClose: () => 
           setConfirmClear(false);
         }}
       />
+    </>
+  );
+}
+
+export function HistoryPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+  return (
+    <Drawer open={open} onClose={onClose} title="观看历史" width="max-w-lg">
+      <HistoryContent />
     </Drawer>
   );
 }

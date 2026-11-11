@@ -4,7 +4,7 @@ import * as React from 'react';
 import gsap from 'gsap';
 import { useRouter, usePathname } from 'next/navigation';
 import { SETTINGS_PANELS, SettingsPanelById, type SettingsPanelId } from './source-manager';
-import { HistoryPanel } from './history-panel';
+import { HistoryContent } from './history-panel';
 import { requestShowDownloadManager } from './download-manager';
 import { useTheme } from './theme';
 import { cn } from '@/lib/utils';
@@ -31,9 +31,8 @@ export function KineticDock() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = React.useState(false);
-  const [level, setLevel] = React.useState<'root' | 'settings'>('root');
+  const [level, setLevel] = React.useState<'root' | 'settings' | 'history'>('root');
   const [settingsPanel, setSettingsPanel] = React.useState<SettingsPanelId | null>(null);
-  const [historyOpen, setHistoryOpen] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
 
@@ -48,7 +47,7 @@ export function KineticDock() {
       shape: 3,
       run: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
     },
-    { key: 'history', label: '观看历史', shape: 4, run: () => setHistoryOpen(true) },
+    { key: 'history', label: '观看历史', shape: 4, run: () => setLevel('history') },
     { key: 'download', label: '下载管理', shape: 5, run: () => requestShowDownloadManager() },
     { key: 'settings', label: '设置', shape: 1, run: () => setLevel('settings') },
   ];
@@ -62,12 +61,14 @@ export function KineticDock() {
     const panels = root.querySelectorAll('.backdrop-layer');
     const links = root.querySelectorAll('.nav-link');
     const subpage = root.querySelector('.settings-subpage');
+    const historySub = root.querySelector('.history-subpage');
     const panelLayer = root.querySelector('.settings-panel-layer');
     gsap.set(menu, { xPercent: 100 });
     gsap.set(overlay, { autoAlpha: 0 });
     gsap.set(panels, { xPercent: 101 });
     gsap.set(links, { yPercent: 140 });
     gsap.set(subpage, { xPercent: 100 });
+    gsap.set(historySub, { xPercent: 100 });
     gsap.set(panelLayer, { xPercent: 100 });
   }, []);
 
@@ -165,8 +166,8 @@ export function KineticDock() {
 
   const pick = (it: ItemDef) => {
     it.run();
-    // 主题切换与设置二级页保持菜单展开，其余动作收起菜单
-    if (it.key !== 'theme' && it.key !== 'settings') close();
+    // 主题切换、设置/历史二级页、下载覆盖层保持菜单展开，其余动作收起菜单
+    if (it.key !== 'theme' && it.key !== 'settings' && it.key !== 'history' && it.key !== 'download') close();
   };
 
   // 菜单关闭时回到一级并收起面板
@@ -194,9 +195,10 @@ export function KineticDock() {
     const root = wrapRef.current;
     if (!root) return;
     const sub = root.querySelector('.settings-subpage');
+    const historySub = root.querySelector('.history-subpage');
     const ctx = gsap.context(() => {
-      if (level === 'settings') gsap.to(sub, { xPercent: 0, duration: 0.5, ease: 'power3.out' });
-      else gsap.to(sub, { xPercent: 100, duration: 0.4, ease: 'power3.in' });
+      gsap.to(sub, { xPercent: level === 'settings' ? 0 : 100, duration: level === 'settings' ? 0.5 : 0.4, ease: level === 'settings' ? 'power3.out' : 'power3.in' });
+      gsap.to(historySub, { xPercent: level === 'history' ? 0 : 100, duration: level === 'history' ? 0.5 : 0.4, ease: level === 'history' ? 'power3.out' : 'power3.in' });
     });
     return () => ctx.revert();
   }, [level]);
@@ -349,11 +351,27 @@ export function KineticDock() {
                 </div>
               </div>
             </div>
+
+            {/* 观看历史二级页：动能滑入，返回回到主菜单 */}
+            <div className="history-subpage absolute inset-0 bg-page flex flex-col">
+              <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-line select-none">
+                <button
+                  type="button"
+                  onClick={() => setLevel('root')}
+                  aria-label="返回主菜单"
+                  className="grid place-items-center h-8 w-8 rounded-full border border-line bg-surface text-muted hover:text-accent transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <span className="text-base font-semibold text-content">观看历史</span>
+              </div>
+              <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
+                <HistoryContent />
+              </div>
+            </div>
           </nav>
         </div>
       </div>
-
-      <HistoryPanel open={historyOpen} onClose={() => setHistoryOpen(false)} />
     </>
   );
 }

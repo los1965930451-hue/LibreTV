@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Drawer } from './drawer';
+import { gsap } from 'gsap';
 import { Icon } from './icon';
 import { useToast } from './toast';
 import { db, type DownloadTaskEntry } from '@/lib/db';
@@ -45,7 +45,8 @@ interface RunningHandle {
   hasTarget: boolean;
 }
 
-export function DownloadManager({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+/** 下载管理器主体内容（常驻挂载，含队列调度与事件监听），可在动能覆盖层中复用 */
+export function DownloadManagerContent() {
   const { toast } = useToast();
   const [tasks, setTasks] = useState<DownloadTaskEntry[]>([]);
   const [capability, setCapability] = useState<'fs-access' | 'memory'>('memory');
@@ -210,16 +211,17 @@ export function DownloadManager({ isOpen, onClose }: { isOpen: boolean; onClose:
     };
   }, [refresh, scheduleNext, toast]);
 
-  // 抽屉打开时：刷新保存能力与任务列表，并启动排队中的任务
+  // 挂载时：刷新保存能力与任务列表，并启动排队中的任务（常驻，仅执行一次）
   useEffect(() => {
-    if (!isOpen) return;
     setCapability(detectSavingCapability());
     setChunkCache(supportsChunkCache());
     // 顺带重读下载设置：多标签页下另一处改了开关也能同步过来
     setProxy(loadDownloadSettings().proxy);
     refresh();
     scheduleNext();
-  }, [isOpen, refresh, scheduleNext]);
+    // 仅在挂载时执行一次
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onToggleProxy = (next: boolean) => {
     // 以落库结果为准回写 state：存储不可用（隐私模式）时 UI 不能假装已保存
@@ -280,8 +282,7 @@ export function DownloadManager({ isOpen, onClose }: { isOpen: boolean; onClose:
   };
 
   return (
-    <Drawer open={isOpen} onClose={onClose} title="下载管理" width="max-w-lg">
-      <div className="space-y-3">
+    <div className="space-y-3">
         <div className="card p-3 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm text-content">经服务器中转下载</p>
@@ -351,8 +352,7 @@ export function DownloadManager({ isOpen, onClose }: { isOpen: boolean; onClose:
             )}
           </div>
         ))}
-      </div>
-    </Drawer>
+    </div>
   );
 }
 
@@ -366,14 +366,72 @@ export function requestShowDownloadManager(): void {
   window.dispatchEvent(new CustomEvent(SHOW_MANAGER_EVENT));
 }
 
-/** 全局挂载点：根布局渲染一次，监听打开事件 */
+/** 全局挂载点：根布局渲染一次，常驻调度逻辑 + 动能风格全屏覆盖层 */
 export function GlobalDownloadManager() {
   const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const onShow = () => setOpen(true);
     window.addEventListener(SHOW_MANAGER_EVENT, onShow);
     return () => window.removeEventListener(SHOW_MANAGER_EVENT, onShow);
   }, []);
-  return <DownloadManager isOpen={open} onClose={() => setOpen(false)} />;
+
+  // 初始：覆盖层隐藏、面板停在右侧屏外
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    gsap.set(wrap, { display: 'none' });
+    gsap.set(panelRef.current, { xPercent: 100 });
+  }, []);
+
+  // 动能滑入/滑出
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap || !panelRef.current) return;
+    const ctx = gsap.context(() => {
+      if (open) {
+        gsap.set(wrap, { display: 'block' });
+        gsap.to(panelRef.current, { xPercent: 0, duration: 0.5, ease: 'power3.out' });
+      } else {
+        gsap.to(panelRef.current, {
+          xPercent: 100,
+          duration: 0.4,
+          ease: 'power3.in',
+          onComplete: () => { gsap.set(wrap, { display: 'none' }); },
+        });
+      }
+    });
+    return () => ctx.revert();
+  }, [open]);
+
+  return (
+    <div ref={wrapRef} className="fixed inset-0 z-50">
+      <div className="absolute inset-0 bg-black/50" onClick={() => setOpen(false)} aria-hidden />
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="下载管理"
+        className="absolute right-0 top-0 h-full w-full sm:max-w-md bg-page border-l border-line flex flex-col outline-none"
+      >
+        <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-line">
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="返回"
+            className="grid place-items-center h-8 w-8 rounded-full border border-line bg-surface text-muted hover:text-accent transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          </button>
+          <span className="text-base font-semibold text-content">下载管理</span>
+        </div>
+        <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4">
+          <DownloadManagerContent />
+        </div>
+      </div>
+    </div>
+  );
 }
 
