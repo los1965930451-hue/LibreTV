@@ -1,0 +1,227 @@
+'use client';
+
+import * as React from 'react';
+import gsap from 'gsap';
+import { useRouter, usePathname } from 'next/navigation';
+import { SourceManagerDrawer } from './source-manager';
+import { HistoryPanel } from './history-panel';
+import { requestShowDownloadManager } from './download-manager';
+import { useTheme } from './theme';
+import { cn } from '@/lib/utils';
+
+/** tkyTV 配色（露露紫），替代参考组件的 indigo/pink */
+const PURPLE = '138,90,224';
+const BLUE = '111,134,255';
+const PINK = '232,120,190';
+
+type ItemDef = {
+  key: string;
+  label: string;
+  shape: number;
+  active?: boolean;
+  run: () => void;
+};
+
+/**
+ * 右侧动能导航：右侧竖直居中的「+」按钮，点击展开全屏动能菜单（背景面板滑入、
+ * 链接逐行上浮、悬停切换抽象图形）。功能沿用原 dock：直播/关于/主题/历史/下载/设置。
+ */
+export function KineticDock() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { theme, setTheme } = useTheme();
+  const [open, setOpen] = React.useState(false);
+  const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [historyOpen, setHistoryOpen] = React.useState(false);
+  const wrapRef = React.useRef<HTMLDivElement>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+
+  const close = React.useCallback(() => setOpen(false), []);
+
+  const items: ItemDef[] = [
+    { key: 'live', label: '直播', shape: 1, active: pathname === '/live', run: () => router.push('/live') },
+    { key: 'about', label: '关于', shape: 2, active: pathname === '/about', run: () => router.push('/about') },
+    {
+      key: 'theme',
+      label: theme === 'dark' ? '切换到浅色' : '切换到深色',
+      shape: 3,
+      run: () => setTheme(theme === 'dark' ? 'light' : 'dark'),
+    },
+    { key: 'history', label: '观看历史', shape: 4, run: () => setHistoryOpen(true) },
+    { key: 'download', label: '下载管理', shape: 5, run: () => requestShowDownloadManager() },
+    { key: 'settings', label: '设置', shape: 1, run: () => setSettingsOpen(true) },
+  ];
+
+  // 初始隐藏状态（菜单在右侧屏外，遮罩/链接归零），避免首屏闪烁
+  React.useLayoutEffect(() => {
+    const root = wrapRef.current;
+    if (!root) return;
+    const menu = root.querySelector('.menu-content');
+    const overlay = root.querySelector('.overlay');
+    const panels = root.querySelectorAll('.backdrop-layer');
+    const links = root.querySelectorAll('.nav-link');
+    gsap.set(menu, { xPercent: 100 });
+    gsap.set(overlay, { autoAlpha: 0 });
+    gsap.set(panels, { xPercent: 101 });
+    gsap.set(links, { yPercent: 140 });
+  }, []);
+
+  // 打开/关闭主动画
+  React.useEffect(() => {
+    const root = wrapRef.current;
+    if (!root) return;
+    const ctx = gsap.context(() => {
+      const menu = root.querySelector('.menu-content');
+      const overlay = root.querySelector('.overlay');
+      const panels = root.querySelectorAll('.backdrop-layer');
+      const links = root.querySelectorAll('.nav-link');
+      const icon = triggerRef.current?.querySelector('.menu-button-icon');
+      if (!menu || !overlay || !icon) return;
+      const tl = gsap.timeline();
+      if (open) {
+        tl.set(root, { display: 'block' })
+          .to(icon, { rotate: 315, duration: 0.5, ease: 'power2.out' }, 0)
+          .to(overlay, { autoAlpha: 1, duration: 0.5 }, 0)
+          .fromTo(panels, { xPercent: 101 }, { xPercent: 0, duration: 0.6, stagger: 0.1, ease: 'power3.out' }, 0.1)
+          .set(menu, { xPercent: 0 }, 0.1)
+          .to(links, { yPercent: 0, duration: 0.65, stagger: 0.06, ease: 'power3.out' }, 0.35);
+      } else {
+        tl.to(overlay, { autoAlpha: 0, duration: 0.35 }, 0)
+          .to(icon, { rotate: 0, duration: 0.4, ease: 'power2.in' }, 0)
+          .to(links, { yPercent: 140, duration: 0.3, stagger: 0.03, ease: 'power2.in' }, 0)
+          .to(menu, { xPercent: 100, duration: 0.45, ease: 'power3.in' }, 0)
+          .set(root, { display: 'none' });
+      }
+    });
+    return () => ctx.revert();
+  }, [open]);
+
+  // 悬停切换抽象图形
+  React.useEffect(() => {
+    const root = wrapRef.current;
+    if (!root) return;
+    const ctx = gsap.context(() => {
+      const host = root.querySelector('.ambient-background-shapes');
+      if (!host) return;
+      root.querySelectorAll('.menu-list-item').forEach((li) => {
+        const idx = li.getAttribute('data-shape');
+        const shape = host?.querySelector(`.bg-shape-${idx}`);
+        if (!shape) return;
+        const els = shape.querySelectorAll('.shape-element');
+        const enter = () => {
+          host.querySelectorAll('.bg-shape').forEach((s) => s.classList.remove('active'));
+          shape.classList.add('active');
+          gsap.fromTo(
+            els,
+            { scale: 0.5, opacity: 0, rotation: -10 },
+            { scale: 1, opacity: 1, rotation: 0, duration: 0.55, stagger: 0.07, ease: 'back.out(1.7)', overwrite: 'auto' }
+          );
+        };
+        const leave = () => {
+          gsap.to(els, { scale: 0.8, opacity: 0, duration: 0.28, ease: 'power2.in', onComplete: () => shape.classList.remove('active'), overwrite: 'auto' });
+        };
+        li.addEventListener('mouseenter', enter);
+        li.addEventListener('mouseleave', leave);
+      });
+    });
+    return () => ctx.revert();
+  }, []);
+
+  // Esc 关闭
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && open && close();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, close]);
+
+  const pick = (it: ItemDef) => {
+    it.run();
+    // 主题切换保持菜单展开，其余动作收起菜单
+    if (it.key !== 'theme') close();
+  };
+
+  return (
+    <>
+      {/* 右侧竖直居中的加号触发按钮 */}
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-label={open ? '关闭菜单' : '打开菜单'}
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="fixed right-3 sm:right-4 top-1/2 -translate-y-1/2 z-50 grid place-items-center h-12 w-12 rounded-full border border-line bg-surface/80 backdrop-blur-xl shadow-lg text-accent hover:shadow-xl transition-shadow"
+      >
+        <svg viewBox="0 0 16 16" fill="none" className="menu-button-icon w-5 h-5">
+          <path d="M7.333 16V0h1.334v16H7.333Z" fill="currentColor" />
+          <path d="M16 8.667H0V7.333h16v1.334Z" fill="currentColor" />
+        </svg>
+      </button>
+
+      {/* 全屏动能菜单 */}
+      <div className="fullscreen-menu-container">
+        <div ref={wrapRef} data-nav="closed" className="nav-overlay-wrapper fixed inset-0 z-40 hidden">
+          <div className="overlay absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={close} />
+          <nav className="menu-content absolute right-0 top-0 h-full w-full sm:max-w-md bg-transparent">
+            <div className="menu-bg relative h-full">
+              <div className="backdrop-layer first absolute inset-0 bg-page" />
+              <div className="backdrop-layer second absolute inset-0 bg-surface/95" />
+              <div className="backdrop-layer absolute inset-0 bg-chip/80" />
+
+              {/* 抽象图形（露露紫系） */}
+              <div className="ambient-background-shapes absolute inset-0 overflow-hidden">
+                <svg className="bg-shape bg-shape-1 absolute inset-0 w-full h-full opacity-0" viewBox="0 0 400 400" fill="none">
+                  <circle className="shape-element" cx="80" cy="120" r="40" fill={`rgba(${PURPLE},0.18)`} />
+                  <circle className="shape-element" cx="300" cy="80" r="60" fill={`rgba(${BLUE},0.15)`} />
+                  <circle className="shape-element" cx="200" cy="300" r="80" fill={`rgba(${PINK},0.12)`} />
+                </svg>
+                <svg className="bg-shape bg-shape-2 absolute inset-0 w-full h-full opacity-0" viewBox="0 0 400 400" fill="none">
+                  <path className="shape-element" d="M0 200 Q100 100 200 200 T400 200" stroke={`rgba(${PURPLE},0.25)`} strokeWidth="50" fill="none" />
+                  <path className="shape-element" d="M0 280 Q100 180 200 280 T400 280" stroke={`rgba(${BLUE},0.18)`} strokeWidth="36" fill="none" />
+                </svg>
+                <svg className="bg-shape bg-shape-3 absolute inset-0 w-full h-full opacity-0" viewBox="0 0 400 400" fill="none">
+                  {[50, 150, 250, 350].map((cx) => (
+                    <circle key={cx} className="shape-element" cx={cx} cy="120" r="9" fill={`rgba(${PURPLE},0.35)`} />
+                  ))}
+                  {[100, 200, 300].map((cx) => (
+                    <circle key={cx} className="shape-element" cx={cx} cy="250" r="13" fill={`rgba(${BLUE},0.28)`} />
+                  ))}
+                </svg>
+                <svg className="bg-shape bg-shape-4 absolute inset-0 w-full h-full opacity-0" viewBox="0 0 400 400" fill="none">
+                  <path className="shape-element" d="M100 100 Q150 50 200 100 Q250 150 200 200 Q150 250 100 200 Q50 150 100 100" fill={`rgba(${PURPLE},0.16)`} />
+                  <path className="shape-element" d="M250 220 Q310 160 350 220 Q380 280 320 320 Q260 340 250 280 Q245 250 250 220" fill={`rgba(${PINK},0.14)`} />
+                </svg>
+                <svg className="bg-shape bg-shape-5 absolute inset-0 w-full h-full opacity-0" viewBox="0 0 400 400" fill="none">
+                  <line className="shape-element" x1="0" y1="100" x2="300" y2="400" stroke={`rgba(${PURPLE},0.18)`} strokeWidth="28" />
+                  <line className="shape-element" x1="100" y1="0" x2="400" y2="300" stroke={`rgba(${BLUE},0.15)`} strokeWidth="22" />
+                </svg>
+              </div>
+
+              <div className="menu-content-wrapper relative h-full flex items-center px-8 sm:px-12">
+                <ul className="menu-list w-full space-y-2">
+                  {items.map((it) => (
+                    <li key={it.key} data-shape={it.shape} className="menu-list-item">
+                      <button
+                        type="button"
+                        onClick={() => pick(it)}
+                        className={cn(
+                          'nav-link relative block w-full text-left overflow-hidden rounded-xl px-3 py-3 group',
+                          it.active && 'text-accent'
+                        )}
+                      >
+                        <span className="nav-link-hover-bg absolute inset-0 bg-hover scale-y-0 origin-bottom transition-transform duration-300 group-hover:scale-y-100" aria-hidden />
+                        <span className="nav-link-text relative text-lg font-semibold text-content">{it.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </nav>
+        </div>
+      </div>
+
+      <SourceManagerDrawer open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <HistoryPanel open={historyOpen} onClose={() => setHistoryOpen(false)} />
+    </>
+  );
+}
