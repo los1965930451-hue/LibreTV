@@ -260,23 +260,23 @@ export function KineticDock() {
                   ))}
                 </ul>
               </div>
+            </div>
 
-              {/* 设置二级页：动能滑入，含返回按钮与可滚动的设置内容 */}
-              <div className="settings-subpage absolute inset-0 bg-page flex flex-col">
-                <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-line">
-                  <button
-                    type="button"
-                    onClick={() => setLevel('root')}
-                    aria-label="返回主菜单"
-                    className="grid place-items-center h-8 w-8 rounded-full border border-line bg-surface text-muted hover:text-accent transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                  </button>
-                  <span className="text-base font-semibold text-content">设置</span>
-                </div>
-                <div className="flex-1 overflow-y-auto px-4 py-4">
-                  <SettingsContent />
-                </div>
+            {/* 设置二级页：动能滑入，含返回按钮与可滚动的设置内容 */}
+            <div className="settings-subpage absolute inset-0 bg-page flex flex-col">
+              <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-line">
+                <button
+                  type="button"
+                  onClick={() => setLevel('root')}
+                  aria-label="返回主菜单"
+                  className="grid place-items-center h-8 w-8 rounded-full border border-line bg-surface text-muted hover:text-accent transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <span className="text-base font-semibold text-content">设置</span>
+              </div>
+              <div className="flex-1 overflow-y-auto px-4 py-4">
+                <SettingsContent />
               </div>
             </div>
           </nav>
