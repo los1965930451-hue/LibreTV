@@ -29,10 +29,6 @@ const MAX_DEPTH = 4; // 每侧最多展示的海报数
 /** 初始居中位置：尽量让左右各有 4 张（第 5 张），不足时取最后一张 */
 const startIndex = (length: number) => (length > MAX_DEPTH ? MAX_DEPTH : Math.max(0, length - 1));
 
-/** 侧海报水平排布：第一张距中心距离、每加深一层的间距（拉宽整体排列） */
-const SIDE_FIRST = 150;
-const SIDE_STEP = 110;
-
 export function CoverFlow<T>({
   items,
   keyOf,
@@ -49,6 +45,22 @@ export function CoverFlow<T>({
   const customImageProxy = useAppStore((s) => s.customImageProxy);
   const wheelLock = useRef(0);
   const drag = useRef<{ x: number; active: number } | null>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [stageW, setStageW] = useState(0);
+
+  // 测量舞台宽度，让侧海报按可用宽度等比铺开（始终不超出容器，且整体更宽）
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el) return;
+    const update = () => setStageW(el.clientWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  // 最外层海报中心距：半宽减去海报半宽与留白
+  const maxX = stageW > 0 ? stageW / 2 - 110 : 480;
+  const sideX = (abs: number) => (abs / MAX_DEPTH) * maxX;
 
   const length = items.length;
   const firstKey = length > 0 ? keyOf(items[0]) : '';
@@ -144,6 +156,7 @@ export function CoverFlow<T>({
   return (
     <div className="w-full select-none">
       <div
+        ref={stageRef}
         className="relative mx-auto h-[340px] sm:h-[400px] w-full max-w-7xl"
         style={{ perspective: '1400px', touchAction: 'pan-y', cursor: 'grab' }}
         onWheel={onWheel}
@@ -181,7 +194,7 @@ export function CoverFlow<T>({
               opacity = 1;
             } else if (abs <= MAX_DEPTH) {
               const sign = offset > 0 ? 1 : -1;
-              const x = sign * (SIDE_FIRST + (abs - 1) * SIDE_STEP);
+              const x = sign * sideX(abs);
               transform = `translateX(-50%) translateX(${x}px) scale(0.78) rotateY(${sign * -55}deg)`;
               opacity = abs >= MAX_DEPTH ? 0.25 : 0.75 - (abs - 1) * 0.15;
             } else {
@@ -244,7 +257,7 @@ export function CoverFlow<T>({
             transform = 'translateX(-50%) translateX(0px) scale(1) rotateY(0deg)';
           } else {
             const sign = offset > 0 ? 1 : -1;
-            const x = sign * (SIDE_FIRST + (abs - 1) * SIDE_STEP);
+            const x = sign * sideX(abs);
             transform = `translateX(-50%) translateX(${x}px) scale(0.78) rotateY(${sign * -55}deg)`;
             opacity = abs >= MAX_DEPTH ? 0.25 : 0.75 - (abs - 1) * 0.15;
           }
