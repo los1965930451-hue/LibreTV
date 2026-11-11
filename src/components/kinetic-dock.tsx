@@ -33,6 +33,7 @@ export function KineticDock() {
   const [open, setOpen] = React.useState(false);
   const [level, setLevel] = React.useState<'root' | 'settings' | 'history'>('root');
   const [settingsPanel, setSettingsPanel] = React.useState<SettingsPanelId | null>(null);
+  (globalThis as any).__dbgRender = { open, mounts: ((globalThis as any).__dbgRender?.mounts ?? 0) + 1 };
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
 
