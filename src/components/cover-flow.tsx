@@ -24,9 +24,9 @@ export interface CoverFlowProps<T> {
   actionLabel?: string;
 }
 
-const MAX_DEPTH = 4; // 每侧最多展示的海报数
+const MAX_DEPTH = 5; // 每侧最多展示的海报数
 
-/** 初始居中位置：尽量让左右各有 4 张（第 5 张），不足时取最后一张 */
+/** 初始居中位置：尽量让左右各有 5 张（第 6 张），不足时取最后一张 */
 const startIndex = (length: number) => (length > MAX_DEPTH ? MAX_DEPTH : Math.max(0, length - 1));
 
 export function CoverFlow<T>({
@@ -48,7 +48,7 @@ export function CoverFlow<T>({
 
   const length = items.length;
   const firstKey = length > 0 ? keyOf(items[0]) : '';
-  // 循环取模：越界时绕回，保证两侧始终能凑满 4 张
+  // 循环取模：越界时绕回，保证两侧始终能凑满 5 张
   const mod = useCallback((i: number) => (length === 0 ? 0 : ((i % length) + length) % length), [length]);
   // 新一次搜索 / 列表切换时回到居中起始位并清空失败记录
   useEffect(() => {
@@ -113,9 +113,9 @@ export function CoverFlow<T>({
 
   const center = items[mod(active)];
 
-  // 9 个槽位：中央 + 左右各 4，索引经取模循环
+  // 11 个槽位：中央 + 左右各 5，索引经取模循环
   const slots = Array.from({ length: MAX_DEPTH * 2 + 1 }, (_, k) => {
-    const offset = k - MAX_DEPTH; // -4..4
+    const offset = k - MAX_DEPTH; // -5..5
     const index = mod(active + offset);
     return { offset, abs: Math.abs(offset), index, item: items[index] };
   });
@@ -126,9 +126,9 @@ export function CoverFlow<T>({
     keyCount[kk] = (keyCount[kk] || 0) + 1;
   });
 
-  // 单海报传送带：M 个克隆围成一圈，位置随 drift 平移，屏外克隆（|offset|>4）透明以隐藏绕回
+  // 单海报传送带：M 个克隆围成一圈，位置随 drift 平移，屏外克隆（|offset|>5）透明以隐藏绕回
   const isSingle = length === 1;
-  const BELT_M = MAX_DEPTH * 2 + 3; // 11 个克隆，中心位置 5 → 几何偏移 -5..5
+  const BELT_M = MAX_DEPTH * 2 + 3; // 13 个克隆，中心位置 6 → 几何偏移 -6..6
   const belt = isSingle
     ? Array.from({ length: BELT_M }, (_, b) => {
         const pos = ((b + drift) % BELT_M + BELT_M) % BELT_M;
@@ -164,7 +164,7 @@ export function CoverFlow<T>({
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
         </button>
 
-        {/* 9 个槽位：中央 + 左右各 4，索引经取模循环；key 稳定以保留 transform 过渡动画 */}
+        {/* 11 个槽位：中央 + 左右各 5，索引经取模循环；key 稳定以保留 transform 过渡动画 */}
         {/* 单海报传送带：克隆随 drift 平滑平移，屏外克隆透明以隐藏绕回 */}
         {isSingle &&
           belt.map(({ b, offset, abs }) => {
