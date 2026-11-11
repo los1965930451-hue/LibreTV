@@ -70,25 +70,27 @@ export function KineticDock() {
     gsap.set(panelLayer, { xPercent: 100 });
   }, []);
 
-  // 打开/关闭主动画
+  // 打开/关闭主动画（持久 timeline，避免 context revert 在切换瞬间把动画还原）
+  const tlRef = React.useRef<gsap.core.Timeline | null>(null);
   React.useEffect(() => {
     const root = wrapRef.current;
     if (!root) return;
-    const ctx = gsap.context(() => {
-      const menu = root.querySelector('.menu-content');
-      const overlay = root.querySelector('.overlay');
-      const links = root.querySelectorAll('.nav-link');
-      const icon = triggerRef.current?.querySelector('.menu-button-icon');
-      const hoverBgs = root.querySelectorAll('.nav-link-hover-bg');
-      const sheens = root.querySelectorAll('.nav-link-sheen');
-      const hoverTexts = root.querySelectorAll('.nav-link-text');
-      if (!menu || !overlay || !icon) return;
-      const tl = gsap.timeline();
-      // 每次开合都重置悬停背景/高光/文字，避免残留色块
-      tl.set(hoverBgs, { xPercent: -100 }, 0)
-        .set(sheens, { xPercent: -160 }, 0)
-        .set(hoverTexts, { x: 0 }, 0);
-      if (open) {
+    const menu = root.querySelector('.menu-content');
+    const overlay = root.querySelector('.overlay');
+    const links = root.querySelectorAll('.nav-link');
+    const icon = triggerRef.current?.querySelector('.menu-button-icon');
+    const hoverBgs = root.querySelectorAll('.nav-link-hover-bg');
+    const sheens = root.querySelectorAll('.nav-link-sheen');
+    const hoverTexts = root.querySelectorAll('.nav-link-text');
+    if (!menu || !overlay || !icon) return;
+    tlRef.current?.kill();
+    const tl = gsap.timeline();
+    tlRef.current = tl;
+    // 每次开合都重置悬停背景/高光/文字，避免残留色块
+    tl.set(hoverBgs, { xPercent: -100 }, 0)
+      .set(sheens, { xPercent: -160 }, 0)
+      .set(hoverTexts, { x: 0 }, 0);
+    if (open) {
         tl.set(root, { display: 'block' })
           .to(icon, { rotate: 315, duration: 0.5, ease: 'power2.out' }, 0)
           .to(overlay, { autoAlpha: 1, duration: 0.5 }, 0)
@@ -103,8 +105,6 @@ export function KineticDock() {
           .fromTo(menu, { xPercent: 0 }, { xPercent: 100, duration: 0.45, ease: 'power3.in' }, 0)
           .set(root, { display: 'none' });
       }
-    });
-    return () => ctx.revert();
   }, [open]);
 
   // 悬停切换抽象图形
