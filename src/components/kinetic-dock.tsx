@@ -58,14 +58,12 @@ export function KineticDock() {
     if (!root) return;
     const menu = root.querySelector('.menu-content');
     const overlay = root.querySelector('.overlay');
-    const panels = root.querySelectorAll('.backdrop-layer');
     const links = root.querySelectorAll('.nav-link');
     const subpage = root.querySelector('.settings-subpage');
     const historySub = root.querySelector('.history-subpage');
     const panelLayer = root.querySelector('.settings-panel-layer');
     gsap.set(menu, { xPercent: 100 });
     gsap.set(overlay, { autoAlpha: 0 });
-    gsap.set(panels, { xPercent: 101 });
     gsap.set(links, { yPercent: 140 });
     gsap.set(subpage, { xPercent: 100 });
     gsap.set(historySub, { xPercent: 100 });
@@ -79,7 +77,6 @@ export function KineticDock() {
     const ctx = gsap.context(() => {
       const menu = root.querySelector('.menu-content');
       const overlay = root.querySelector('.overlay');
-      const panels = root.querySelectorAll('.backdrop-layer');
       const links = root.querySelectorAll('.nav-link');
       const icon = triggerRef.current?.querySelector('.menu-button-icon');
       const hoverBgs = root.querySelectorAll('.nav-link-hover-bg');
@@ -95,8 +92,7 @@ export function KineticDock() {
         tl.set(root, { display: 'block' })
           .to(icon, { rotate: 315, duration: 0.5, ease: 'power2.out' }, 0)
           .to(overlay, { autoAlpha: 1, duration: 0.5 }, 0)
-          .fromTo(panels, { xPercent: 101 }, { xPercent: 0, duration: 0.6, stagger: 0.1, ease: 'power3.out' }, 0.1)
-          .set(menu, { xPercent: 0 }, 0.1)
+          .fromTo(menu, { xPercent: 100 }, { xPercent: 0, duration: 0.55, ease: 'power3.out' }, 0.1)
           .to(links, { yPercent: 0, duration: 0.65, stagger: 0.06, ease: 'power3.out' }, 0.35);
       } else {
         tl.to(overlay, { autoAlpha: 0, duration: 0.35 }, 0)
@@ -224,7 +220,7 @@ export function KineticDock() {
       <div className="fullscreen-menu-container">
         <div ref={wrapRef} data-nav="closed" className="nav-overlay-wrapper fixed inset-0 z-40 hidden">
           <div className="overlay absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={close} />
-          <nav className="menu-content absolute right-0 top-0 h-full w-full sm:max-w-md bg-transparent">
+          <nav className="menu-content absolute right-0 top-0 h-full w-full sm:max-w-md bg-page">
             <div className="menu-bg relative h-full">
               <div className="backdrop-layer first absolute inset-0 bg-page" />
               <div className="backdrop-layer second absolute inset-0 bg-surface/95" />
