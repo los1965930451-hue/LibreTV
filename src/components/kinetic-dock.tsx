@@ -3,7 +3,7 @@
 import * as React from 'react';
 import gsap from 'gsap';
 import { useRouter, usePathname } from 'next/navigation';
-import { SettingsContent } from './source-manager';
+import { SETTINGS_PANELS, SettingsPanelById, type SettingsPanelId } from './source-manager';
 import { HistoryPanel } from './history-panel';
 import { requestShowDownloadManager } from './download-manager';
 import { useTheme } from './theme';
@@ -32,6 +32,7 @@ export function KineticDock() {
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = React.useState(false);
   const [level, setLevel] = React.useState<'root' | 'settings'>('root');
+  const [settingsPanel, setSettingsPanel] = React.useState<SettingsPanelId | null>(null);
   const [historyOpen, setHistoryOpen] = React.useState(false);
   const wrapRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
@@ -61,11 +62,13 @@ export function KineticDock() {
     const panels = root.querySelectorAll('.backdrop-layer');
     const links = root.querySelectorAll('.nav-link');
     const subpage = root.querySelector('.settings-subpage');
+    const panelLayer = root.querySelector('.settings-panel-layer');
     gsap.set(menu, { xPercent: 100 });
     gsap.set(overlay, { autoAlpha: 0 });
     gsap.set(panels, { xPercent: 101 });
     gsap.set(links, { yPercent: 140 });
     gsap.set(subpage, { xPercent: 100 });
+    gsap.set(panelLayer, { xPercent: 100 });
   }, []);
 
   // 打开/关闭主动画
@@ -159,10 +162,25 @@ export function KineticDock() {
     if (it.key !== 'theme' && it.key !== 'settings') close();
   };
 
-  // 菜单关闭时回到一级
+  // 菜单关闭时回到一级并收起面板
   React.useEffect(() => {
-    if (!open) setLevel('root');
+    if (!open) {
+      setLevel('root');
+      setSettingsPanel(null);
+    }
   }, [open]);
+
+  // 设置面板层滑入/滑出
+  React.useEffect(() => {
+    const root = wrapRef.current;
+    if (!root) return;
+    const layer = root.querySelector('.settings-panel-layer');
+    const ctx = gsap.context(() => {
+      if (settingsPanel) gsap.to(layer, { xPercent: 0, duration: 0.5, ease: 'power3.out' });
+      else gsap.to(layer, { xPercent: 100, duration: 0.4, ease: 'power3.in' });
+    });
+    return () => ctx.revert();
+  }, [settingsPanel]);
 
   // 设置二级页滑入/滑出
   React.useEffect(() => {
@@ -262,21 +280,66 @@ export function KineticDock() {
               </div>
             </div>
 
-            {/* 设置二级页：动能滑入，含返回按钮与可滚动的设置内容 */}
+            {/* 设置二级页：动能大条目列表 + 面板层滑入 */}
             <div className="settings-subpage absolute inset-0 bg-page flex flex-col">
-              <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-line">
-                <button
-                  type="button"
-                  onClick={() => setLevel('root')}
-                  aria-label="返回主菜单"
-                  className="grid place-items-center h-8 w-8 rounded-full border border-line bg-surface text-muted hover:text-accent transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                </button>
-                <span className="text-base font-semibold text-content">设置</span>
+              {/* 列表层 */}
+              <div className="settings-list-layer flex-1 flex flex-col min-h-0">
+                <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-line">
+                  <button
+                    type="button"
+                    onClick={() => setLevel('root')}
+                    aria-label="返回主菜单"
+                    className="grid place-items-center h-8 w-8 rounded-full border border-line bg-surface text-muted hover:text-accent transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  </button>
+                  <span className="text-base font-semibold text-content">设置</span>
+                </div>
+                <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4">
+                  <ul className="menu-list w-full space-y-2">
+                    {SETTINGS_PANELS.map((p) => (
+                      <li key={p.id} className="menu-list-item">
+                        <button
+                          type="button"
+                          onClick={() => setSettingsPanel(p.id)}
+                          className="nav-link relative block w-full text-left overflow-hidden rounded-xl px-3 py-3 group"
+                        >
+                          <span
+                            className="nav-link-hover-bg absolute inset-0 rounded-xl"
+                            style={{ background: 'linear-gradient(90deg, rgba(138,90,224,0.20), rgba(138,90,224,0.05))' }}
+                            aria-hidden
+                          />
+                          <span
+                            className="nav-link-sheen absolute inset-y-0 w-1/3"
+                            style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)' }}
+                            aria-hidden
+                          />
+                          <span className="nav-link-text relative text-lg font-semibold text-content transition-colors group-hover:text-accent">{p.label}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              <div className="flex-1 overflow-y-auto px-4 py-4">
-                <SettingsContent />
+
+              {/* 面板层：点条目后滑入，返回回到列表 */}
+              <div className="settings-panel-layer absolute inset-0 bg-page flex flex-col">
+                <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-line">
+                  <button
+                    type="button"
+                    onClick={() => setSettingsPanel(null)}
+                    aria-label="返回设置列表"
+                    className="grid place-items-center h-8 w-8 rounded-full border border-line bg-surface text-muted hover:text-accent transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                  </button>
+                  <span className="text-base font-semibold text-content">
+                    {SETTINGS_PANELS.find((p) => p.id === settingsPanel)?.label ?? ''}
+                  </span>
+                </div>
+                <div className="flex-1 overflow-y-auto px-4 py-4">
+                  {settingsPanel && <SettingsPanelById id={settingsPanel} />}
+                </div>
               </div>
             </div>
           </nav>

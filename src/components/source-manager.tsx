@@ -36,7 +36,7 @@ import { describeParseStats } from '@/lib/tvbox-parser';
  * 选中位置记忆到 localStorage，再次打开回到上次所在面板。
  */
 
-type SettingsPanelId = 'vod' | 'live' | 'subs' | 'playback' | 'io';
+export type SettingsPanelId = 'vod' | 'live' | 'subs' | 'playback' | 'io';
 
 const NAV_GROUPS: { title: string; items: { id: SettingsPanelId; label: string; icon: IconName }[] }[] = [
   {
@@ -156,6 +156,24 @@ export function SettingsContent() {
           {active === 'io' && <ConfigIoPanel />}
         </div>
     </div>
+  );
+}
+
+/** 动能设置页使用的面板清单（大条目列表） */
+export const SETTINGS_PANELS: { id: SettingsPanelId; label: string }[] = NAV_GROUPS.flatMap((g) =>
+  g.items.map((i) => ({ id: i.id, label: i.label })),
+);
+
+/** 按 id 渲染对应设置面板 */
+export function SettingsPanelById({ id }: { id: SettingsPanelId }) {
+  return (
+    <>
+      {id === 'vod' && <VodSourcesPanel />}
+      {id === 'live' && <LiveSourceManager />}
+      {id === 'playback' && <PlaybackPanel />}
+      {id === 'subs' && <SourceSubscriptions />}
+      {id === 'io' && <ConfigIoPanel />}
+    </>
   );
 }
 
