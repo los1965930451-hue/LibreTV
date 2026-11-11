@@ -229,10 +229,10 @@ export function KineticDock() {
           <div className="overlay absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={close} />
           <nav className="menu-content absolute right-0 top-0 h-full w-full sm:max-w-md bg-page">
             <div className="menu-bg relative h-full">
-              {/* 三层动能页面：从后（左）到前（右）蓝 → 灰 → 白，静止时清晰露出，移动端收窄避免出屏 */}
-              <div className="backdrop-layer absolute top-0 h-full w-full rounded-r-2xl left-[-16px] sm:left-[-100px]" style={{ background: '#8a5ae0' }} />
-              <div className="backdrop-layer absolute top-0 h-full w-full rounded-r-2xl left-[-8px] sm:left-[-50px]" style={{ background: '#8a8a8a' }} />
-              <div className="backdrop-layer absolute top-0 h-full w-full rounded-r-2xl bg-page" />
+              {/* 三层动能页面：错峰滑入时可见三层，静止后全部对齐，仅最前白色可见 */}
+              <div className="backdrop-layer absolute inset-0 rounded-r-2xl" style={{ background: '#8a5ae0' }} />
+              <div className="backdrop-layer absolute inset-0 rounded-r-2xl" style={{ background: '#8a8a8a' }} />
+              <div className="backdrop-layer absolute inset-0 rounded-r-2xl bg-page" />
 
               {/* 抽象图形（露露紫系） */}
               <div className="ambient-background-shapes absolute inset-0 overflow-hidden">
