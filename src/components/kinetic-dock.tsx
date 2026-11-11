@@ -230,7 +230,7 @@ export function KineticDock() {
           <nav className="menu-content absolute right-0 top-0 h-full w-full sm:max-w-md bg-page">
             <div className="menu-bg relative h-full">
               {/* 三层动能页面：从后（左）到前（右）蓝 → 灰 → 白，静止时清晰露出，移动端收窄避免出屏 */}
-              <div className="backdrop-layer absolute top-0 h-full w-full rounded-r-2xl left-[-16px] sm:left-[-100px]" style={{ background: '#5b5bd6' }} />
+              <div className="backdrop-layer absolute top-0 h-full w-full rounded-r-2xl left-[-16px] sm:left-[-100px]" style={{ background: '#8a5ae0' }} />
               <div className="backdrop-layer absolute top-0 h-full w-full rounded-r-2xl left-[-8px] sm:left-[-50px]" style={{ background: '#8a8a8a' }} />
               <div className="backdrop-layer absolute top-0 h-full w-full rounded-r-2xl bg-page" />
 
