@@ -95,7 +95,9 @@ export function KineticDock() {
           .fromTo(menu, { xPercent: 100 }, { xPercent: 0, duration: 0.55, ease: 'power3.out' }, 0.1)
           .to(links, { yPercent: 0, duration: 0.65, stagger: 0.06, ease: 'power3.out' }, 0.35);
       } else {
-        tl.to(overlay, { autoAlpha: 0, duration: 0.35 }, 0)
+        // 先保持覆盖层可见（覆盖 Tailwind 的 hidden 类），滑出结束后再隐藏
+        tl.set(root, { display: 'block' }, 0)
+          .to(overlay, { autoAlpha: 0, duration: 0.35 }, 0)
           .to(icon, { rotate: 0, duration: 0.4, ease: 'power2.in' }, 0)
           .to(links, { yPercent: 140, duration: 0.3, stagger: 0.03, ease: 'power2.in' }, 0)
           .to(menu, { xPercent: 100, duration: 0.45, ease: 'power3.in' }, 0)
