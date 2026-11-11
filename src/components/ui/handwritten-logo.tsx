@@ -45,7 +45,7 @@ export function HandwrittenLogo({
     <svg
       viewBox={VIEW_BOX}
       aria-hidden
-      className={cn('h-14 sm:h-16 w-auto text-accent overflow-visible', className)}
+      className={cn('h-[84px] sm:h-24 w-auto text-accent overflow-visible', className)}
       fill="none"
     >
       <path
