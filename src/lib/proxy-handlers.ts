@@ -243,7 +243,71 @@ export async function handleLiveStreamRequest(req: Request, targetUrl: string): 
   outHeaders.set('Cache-Control', 'no-store, no-transform');
   outHeaders.set('X-Accel-Buffering', 'no');
 
-  return new NextResponse(response.body, {
+  // 客户端 Range（hls.js 通常不发，透传即可）或无明确长度（FLV 无限流）时，维持原始透传。
+  const clientRange = req.headers.get('range');
+  const declaredLen = response.headers.get('content-length');
+  const totalLen = declaredLen ? Number(declaredLen) : NaN;
+  const canResume = !clientRange && Number.isFinite(totalLen) && totalLen > 0 && !!response.body;
+  if (!canResume) {
+    return new NextResponse(response.body, {
+      status: response.status,
+      headers: outHeaders,
+    });
+  }
+
+  // 断点续流：部分链路（实测 EdgeOne 节点 → damitv）会在中途静默关闭连接，
+  // hls.js 收到截断分片即无法起播。上游支持 Range，故在流提前结束时按已收字节
+  // 续拉并拼接，直到达到声明的完整长度。首段复用已取得的 response，不重复请求。
+  const firstBody = response.body as ReadableStream<Uint8Array>;
+  const stitched = new ReadableStream<Uint8Array>({
+    start(streamController) {
+      void (async () => {
+        let offset = 0;
+        try {
+          const drain = async (body: ReadableStream<Uint8Array>) => {
+            const reader = body.getReader();
+            for (;;) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              if (value && value.length) {
+                streamController.enqueue(value);
+                offset += value.length;
+              }
+            }
+          };
+          await drain(firstBody);
+          while (offset < totalLen) {
+            const resumeHeaders: Record<string, string> = {
+              ...headers,
+              Range: `bytes=${offset}-`,
+            };
+            const resumed = await fetchWithSafeRedirects(
+              targetUrl,
+              { headers: resumeHeaders, signal: controller.signal },
+              { allowPrivate: true, headerTimeoutMs: HEADER_TIMEOUT_MS }
+            );
+            if (!resumed.res.ok || !resumed.res.body) {
+              throw new Error(`分片续拉失败 ${resumed.res.status}`);
+            }
+            const before = offset;
+            await drain(resumed.res.body as ReadableStream<Uint8Array>);
+            if (offset === before) {
+              throw new Error('分片续拉无进展');
+            }
+          }
+          streamController.close();
+        } catch (err) {
+          try {
+            streamController.error(err);
+          } catch {
+            /* 已关闭则忽略 */
+          }
+        }
+      })();
+    },
+  });
+
+  return new NextResponse(stitched, {
     status: response.status,
     headers: outHeaders,
   });
