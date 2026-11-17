@@ -178,6 +178,14 @@ export async function handleLiveStreamRequest(req: Request, targetUrl: string): 
   req.signal.addEventListener('abort', onClientAbort, { once: true });
 
   const headers: Record<string, string> = { 'User-Agent': UA, Accept: '*/*' };
+  // 源站 Referer 防盗链：大量 IPTV 源（如 damitv）校验 Referer，缺失即返回 403。
+  // 带上目标自身 origin（与 /api/live/probe 的 refererOf 同一口径），
+  // 等价于浏览器在该站点内发起的请求；不引入任何外部来源。
+  try {
+    headers.Referer = `${new URL(targetUrl).origin}/`;
+  } catch {
+    /* 非法 URL 已由 checkLiveUrlAllowed 拦截，这里忽略 */
+  }
 
   let response: Response;
   let finalUrl: string;
